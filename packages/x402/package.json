@@ -1,0 +1,39 @@
+{
+  "name": "@sei-code/x402",
+  "version": "0.1.0",
+  "description": "Payment protocol integration for Sei agents with subscription management and monetization",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "sei",
+    "x402",
+    "payments",
+    "micropayments",
+    "subscription",
+    "monetization",
+    "agent"
+  ],
+  "author": "Sei Code",
+  "license": "MIT",
+  "dependencies": {
+    "@sei-code/core": "workspace:*",
+    "@sei-code/wallets": "workspace:*",
+    "@sei-code/transactions": "workspace:*",
+    "@sei-js/x402": "^0.1.0",
+    "@sei-js/x402-express": "^0.1.0",
+    "@sei-js/x402-fetch": "^0.1.0",
+    "ethers": "^6.0.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

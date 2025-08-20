@@ -1,0 +1,36 @@
+{
+  "name": "@sei-code/analytics",
+  "version": "0.1.0",
+  "description": "Blockchain data analysis and monitoring for Sei network",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "sei",
+    "analytics",
+    "blockchain",
+    "portfolio",
+    "defi",
+    "monitoring"
+  ],
+  "author": "Sei Code",
+  "license": "MIT",
+  "dependencies": {
+    "@sei-code/core": "workspace:*",
+    "@sei-code/precompiles": "workspace:*",
+    "@sei-js/precompiles": "^0.1.0",
+    "@sei-js/registry": "^0.1.0",
+    "ethers": "^6.0.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

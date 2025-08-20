@@ -1,0 +1,24 @@
+{
+  "name": "voting-app",
+  "description": "Governance voting application template for Sei blockchain",
+  "version": "1.0.0",
+  "packages": ["core", "governance", "wallets", "precompiles", "social"],
+  "features": [
+    "governance participation",
+    "real-time notifications",
+    "voting power tracking"
+  ],
+  "integrations": ["telegram"],
+  "files": [
+    {
+      "path": "src/agents/voting-agent.ts",
+      "template": true,
+      "variables": ["projectName", "network"]
+    },
+    {
+      "path": "src/services/notification-service.ts",
+      "template": true,
+      "variables": ["telegramToken"]
+    }
+  ]
+}

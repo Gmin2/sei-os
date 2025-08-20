@@ -1,0 +1,38 @@
+{
+  "name": "@sei-code/nft",
+  "version": "0.1.0",
+  "description": "NFT operations and marketplace interactions for Sei blockchain",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "sei",
+    "nft",
+    "erc721",
+    "erc1155",
+    "blockchain",
+    "cosmwasm",
+    "ethereum"
+  ],
+  "author": "Sei Code",
+  "license": "MIT",
+  "dependencies": {
+    "@sei-code/core": "workspace:*",
+    "@sei-code/wallets": "workspace:*",
+    "@sei-code/transactions": "workspace:*",
+    "@sei-js/precompiles": "^0.1.0",
+    "@sei-js/registry": "^0.1.0",
+    "ethers": "^6.0.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

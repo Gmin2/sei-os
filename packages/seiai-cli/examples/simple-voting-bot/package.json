@@ -1,0 +1,30 @@
+{
+  "name": "simple-voting-bot",
+  "version": "1.0.0",
+  "description": "A simple governance voting bot for Sei blockchain",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "start": "node dist/index.js",
+    "deploy": "node scripts/deploy.js",
+    "deploy:testnet": "node scripts/deploy.js --network testnet"
+  },
+  "dependencies": {
+    "@sei-code/core": "^1.0.0",
+    "@sei-code/governance": "^1.0.0",
+    "@sei-code/wallets": "^1.0.0",
+    "@sei-code/precompiles": "^1.0.0",
+    "@sei-code/social": "^1.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0"
+  },
+  "keywords": ["sei", "blockchain", "governance", "voting", "bot"],
+  "author": "Sei AI Studio",
+  "license": "MIT"
+}

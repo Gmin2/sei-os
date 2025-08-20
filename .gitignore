@@ -3,3 +3,4 @@ node_modules
 packages/**/dist/** 
 packages/**/tsconfig.tsbuildinfo
 TODO.md
+CLAUDE.md
