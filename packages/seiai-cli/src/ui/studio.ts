@@ -410,6 +410,9 @@ export class StudioInterface {
 
     try {
       const result = await this.deployment.deploy(project, network);
+      if (!project.deployments) {
+        project.deployments = [];
+      }
       project.deployments.push(result);
       
       spinner.succeed(chalk.green(`✅ Deployed to ${network}!`));
@@ -502,7 +505,7 @@ export class StudioInterface {
       chalk.cyan('Packages: ') + chalk.white(project.config.packages.join(', ')) + '\n' +
       chalk.cyan('Features: ') + chalk.white(project.config.features.join(', ')) + '\n' +
       chalk.cyan('Last Modified: ') + chalk.white(new Date(project.lastModified).toLocaleString()) + '\n' +
-      chalk.cyan('Deployments: ') + chalk.white(project.deployments.length.toString()),
+      chalk.cyan('Deployments: ') + chalk.white((project.deployments?.length || 0).toString()),
       {
         padding: 1,
         borderStyle: 'round',

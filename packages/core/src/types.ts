@@ -9,6 +9,9 @@ export interface SeiAgentConfig {
   provider?: Provider;
 }
 
+// Alias for backward compatibility
+export type AgentConfig = SeiAgentConfig;
+
 export interface SeiWallet {
   address: string;
   privateKey?: string;

@@ -4,14 +4,13 @@ export class NaturalLanguageAnalyzer {
   private packageKeywords = new Map<string, string[]>([
     ['core', ['agent', 'framework', 'base', 'foundation']],
     ['wallets', ['wallet', 'connect', 'sign', 'transaction', 'balance', 'metamask', 'sei-global']],
-    ['precompiles', ['bank', 'staking', 'oracle', 'distribution', 'governance', 'precompile', 'native']],
+    ['precompiles', ['bank', 'staking', 'oracle', 'distribution', 'governance', 'precompile', 'native', 'vote', 'voting', 'proposal', 'dao', 'delegate', 'validator']],
     ['transactions', ['send', 'transfer', 'execute', 'broadcast', 'transaction', 'tx']],
     ['nft', ['nft', 'token', 'erc721', 'erc1155', 'collectible', 'marketplace', 'mint', 'trade']],
     ['analytics', ['analytics', 'data', 'metrics', 'statistics', 'performance', 'tracking', 'monitor']],
     ['social', ['telegram', 'discord', 'twitter', 'bot', 'notification', 'social', 'chat']],
     ['models', ['ai', 'llm', 'gemini', 'claude', 'openai', 'gpt', 'model', 'chat', 'intelligent']],
-    ['x402', ['payment', 'pay', 'subscription', 'monetize', 'revenue', 'billing', 'x402']],
-    ['governance', ['voting', 'proposal', 'vote', 'governance', 'dao', 'delegate', 'validator']]
+    ['x402', ['payment', 'pay', 'subscription', 'monetize', 'revenue', 'billing', 'x402']]
   ]);
 
   private projectTypeKeywords = new Map<string, string[]>([
@@ -45,34 +44,49 @@ export class NaturalLanguageAnalyzer {
   ]);
 
   analyze(userInput: string): AnalyzedRequest {
-    const normalizedInput = userInput.toLowerCase();
-    
-    // Determine intent
-    const intent = this.determineIntent(normalizedInput);
-    
-    // Determine project type
-    const projectType = this.determineProjectType(normalizedInput);
-    
-    // Identify required packages
-    const packages = this.identifyPackages(normalizedInput, projectType);
-    
-    // Identify features
-    const features = this.identifyFeatures(normalizedInput);
-    
-    // Identify integrations
-    const integrations = this.identifyIntegrations(normalizedInput);
-    
-    // Calculate confidence score
-    const confidence = this.calculateConfidence(normalizedInput, projectType, packages, features);
+    if (!userInput || userInput.trim().length === 0) {
+      throw new Error('Input cannot be empty');
+    }
 
-    return {
-      intent,
-      projectType,
-      packages,
-      features,
-      integrations,
-      confidence
-    };
+    if (userInput.trim().length < 3) {
+      throw new Error('Input too short - please provide a more detailed description');
+    }
+
+    const normalizedInput = userInput.toLowerCase().trim();
+    
+    try {
+      // Determine intent
+      const intent = this.determineIntent(normalizedInput);
+      
+      // Determine project type
+      const projectType = this.determineProjectType(normalizedInput);
+      
+      // Identify required packages
+      const packages = this.identifyPackages(normalizedInput, projectType);
+      
+      // Identify features
+      const features = this.identifyFeatures(normalizedInput);
+      
+      // Identify integrations
+      const integrations = this.identifyIntegrations(normalizedInput);
+      
+      // Calculate confidence score
+      const confidence = this.calculateConfidence(normalizedInput, projectType, packages, features);
+
+      // Validate results
+      this.validateAnalysis(packages, features, confidence);
+
+      return {
+        intent,
+        projectType,
+        packages,
+        features,
+        integrations,
+        confidence
+      };
+    } catch (error) {
+      throw new Error(`Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private determineIntent(input: string): 'create' | 'enhance' | 'deploy' | 'analyze' {
@@ -149,9 +163,10 @@ export class NaturalLanguageAnalyzer {
       case 'voting':
       case 'governance':
         return [
-          { name: 'governance', required: true, reason: 'Governance voting functionality' },
+          { name: 'precompiles', required: true, reason: 'Governance voting functionality via precompiles' },
           { name: 'wallets', required: true, reason: 'Wallet integration for voting' },
-          { name: 'precompiles', required: true, reason: 'Sei governance precompiles' }
+          { name: 'social', required: false, reason: 'Optional social notifications' },
+          { name: 'models', required: false, reason: 'Optional AI-powered analysis' }
         ];
       
       case 'defi':
@@ -244,12 +259,19 @@ export class NaturalLanguageAnalyzer {
     score += Math.min(20, features.length * 4);
 
     // Input length and clarity (10 points)
-    const words = input.split(' ').length;
+    const words = input.split(' ').filter(word => word.length > 0).length;
     if (words >= 5 && words <= 50) {
       score += 10;
     } else if (words > 50) {
       score += 5;
+    } else if (words < 3) {
+      score -= 20; // Penalty for very short input
     }
+
+    // Bonus for specific technical terms
+    const technicalTerms = ['blockchain', 'smart contract', 'dapp', 'web3', 'defi', 'nft'];
+    const techMatches = technicalTerms.filter(term => input.includes(term)).length;
+    score += Math.min(10, techMatches * 2);
 
     return Math.min(100, Math.max(10, score));
   }
@@ -294,5 +316,56 @@ export class NaturalLanguageAnalyzer {
     }
 
     return `${baseDescription} generated from: "${input.slice(0, 100)}${input.length > 100 ? '...' : ''}"`;
+  }
+
+  private validateAnalysis(packages: PackageRequirement[], features: string[], confidence: number): void {
+    if (packages.length === 0) {
+      throw new Error('No packages identified - analysis failed');
+    }
+
+    if (confidence < 20) {
+      throw new Error('Confidence too low - please provide a more detailed description');
+    }
+
+    // Ensure core package is always included
+    if (!packages.find(p => p.name === 'core')) {
+      packages.unshift({
+        name: 'core',
+        required: true,
+        reason: 'Required base framework for all Sei agents'
+      });
+    }
+  }
+
+  getSuggestions(input: string): string[] {
+    const suggestions: string[] = [];
+    const normalizedInput = input.toLowerCase();
+
+    // Suggest missing common combinations
+    if (normalizedInput.includes('vote') || normalizedInput.includes('governance')) {
+      if (!normalizedInput.includes('telegram') && !normalizedInput.includes('notification')) {
+        suggestions.push('Add Telegram notifications for governance updates');
+      }
+      if (!normalizedInput.includes('analytics')) {
+        suggestions.push('Add analytics to track voting patterns');
+      }
+    }
+
+    if (normalizedInput.includes('defi') || normalizedInput.includes('trading')) {
+      if (!normalizedInput.includes('analytics')) {
+        suggestions.push('Add portfolio analytics and tracking');
+      }
+      if (!normalizedInput.includes('oracle')) {
+        suggestions.push('Add price feeds using oracle precompiles');
+      }
+    }
+
+    if (normalizedInput.includes('nft')) {
+      if (!normalizedInput.includes('marketplace')) {
+        suggestions.push('Add NFT marketplace functionality');
+      }
+    }
+
+    return suggestions;
   }
 }

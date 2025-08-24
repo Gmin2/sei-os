@@ -9,7 +9,8 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'No lint configured'"
   },
   "dependencies": {
     "@sei-code/core": "workspace:*",

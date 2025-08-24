@@ -5,3 +5,10 @@ packages/**/tsconfig.tsbuildinfo
 TODO.md
 CLAUDE.md
 manual-testing.md
+**/**/**.mjs
+examples/**/dist/**
+examples/**/tsconfig.tsbuildinfo
+.turbo/** 
+examples/**/.turbo/**
+packages/**/.turbo/**
+.env

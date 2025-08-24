@@ -9,6 +9,9 @@
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "clean": "rm -rf dist",
+    "test": "echo 'No tests configured'",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'No lint configured'",
     "deploy": "tsx scripts/deploy.ts"
   },
   "dependencies": {

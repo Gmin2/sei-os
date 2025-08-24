@@ -5,6 +5,10 @@ export interface ProjectConfig {
   features: string[];
   template: 'voting-app' | 'defi-app' | 'social-bot' | 'nft-trader' | 'custom';
   network: 'mainnet' | 'testnet' | 'devnet';
+  version?: string;
+  createdAt?: string;
+  lastModified?: string;
+  integrations?: Integration[];
 }
 
 export interface AnalyzedRequest {
@@ -68,8 +72,9 @@ export interface ProjectInfo {
   name: string;
   path: string;
   config: ProjectConfig;
+  packageJson?: any;
   lastModified: string;
-  deployments: DeploymentInfo[];
+  deployments?: DeploymentInfo[];
 }
 
 export interface DeploymentInfo {
@@ -113,4 +118,5 @@ export interface CLIOptions {
   config?: string;
   project?: string;
   estimate?: boolean;
+  noBanner?: boolean;
 }

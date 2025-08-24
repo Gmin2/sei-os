@@ -7,11 +7,10 @@
     "target": "ES2022",
     "moduleResolution": "node"
   },
-  "include": ["src/**/*", "scripts/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"],
   "references": [
     { "path": "../../packages/core" },
-    { "path": "../../packages/governance" },
     { "path": "../../packages/wallets" },
     { "path": "../../packages/precompiles" },
     { "path": "../../packages/social" },

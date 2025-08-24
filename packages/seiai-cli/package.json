@@ -11,6 +11,9 @@
     "build": "tsc && cp -r ./templates ./dist/templates && cp -r ./examples ./dist/examples",
     "dev": "node --loader ts-node/esm src/index.ts",
     "test": "jest",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'No lint configured'",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -41,7 +44,8 @@
     "ora": "^8.0.1",
     "figlet": "^1.7.0",
     "gradient-string": "^2.0.2",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "@types/boxen": "^3.0.1",

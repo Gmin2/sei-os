@@ -1,277 +1,231 @@
-# Sei Governance Voting Agent
+# 🗳️ Sei Governance Voting Agent
 
-A comprehensive AI-powered governance agent for the Sei blockchain that monitors proposals, provides intelligent analysis, and facilitates voting through Telegram bot integration.
+An intelligent governance voting agent for Sei Network that combines AI analysis, portfolio insights, and automated monitoring to help you participate effectively in Sei's governance.
 
-## Features
+## ✨ Features
 
-- 🗳️ **Automated Proposal Monitoring**: Tracks new governance proposals in real-time
-- 🤖 **AI-Powered Analysis**: Uses Gemini/Claude/OpenAI to analyze proposals and provide voting recommendations
-- 📱 **Telegram Bot Integration**: Interactive bot for voting, analysis, and notifications
-- 📊 **Analytics & Insights**: Comprehensive voting analytics and governance health metrics
-- ⚡ **Real-time Notifications**: Instant alerts for new proposals and voting deadlines
-- 🔐 **Multi-Wallet Support**: Compatible with MetaMask and Sei Global Wallet
+- **🤖 AI-Powered Analysis**: Get intelligent recommendations on governance proposals using Google Gemini
+- **📊 Portfolio Integration**: Analyze how proposals might affect your portfolio
+- **📱 Telegram Notifications**: Real-time updates about new proposals and voting results
+- **🔍 Automated Monitoring**: Continuous tracking of governance activity
+- **⚡ Smart Voting**: Execute votes with comprehensive analysis and safety checks
+- **📈 Analytics Dashboard**: Deep insights into your governance participation
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Node.js 18+ and pnpm
-- Telegram Bot Token (from [@BotFather](https://t.me/botfather))
-- Sei wallet with some SEI tokens for voting
-- AI API key (Gemini, Claude, or OpenAI)
+- Sei Network testnet/mainnet access
+- Optional: Telegram Bot Token, Gemini API Key
 
 ### Installation
 
 ```bash
-# Clone and navigate to the voting app
-cd examples/voting-app
-
 # Install dependencies
 pnpm install
 
-# Copy environment template
+# Copy environment configuration
 cp .env.example .env
 
-# Edit .env with your configuration
+# Edit .env with your configuration (optional for demo)
 nano .env
-```
-
-### Configuration
-
-Edit your `.env` file with the following:
-
-```bash
-# Wallet Configuration
-PRIVATE_KEY=your_wallet_private_key
-WALLET_TYPE=metamask
-NETWORK=testnet
-
-# Telegram Bot
-TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
-TELEGRAM_CHAT_ID=your_telegram_chat_id
-
-# AI Model (choose one)
-GEMINI_API_KEY=your_gemini_api_key
-MODEL_PROVIDER=gemini
-
-# Sei Network
-SEI_RPC_URL=https://evm-rpc-testnet.sei-apis.com
-SEI_CHAIN_ID=713715
 ```
 
 ### Running the Agent
 
 ```bash
-# Development mode with hot reload
-pnpm dev
+# Demo mode (shows capabilities without real transactions)
+pnpm run dev
 
-# Production mode
-pnpm build
-pnpm start
-
-# Deploy with validation
-pnpm run deploy
+# Production mode (requires environment variables)
+NODE_ENV=production pnpm run dev
 ```
 
-## Telegram Bot Commands
+## 🔧 Configuration
 
-Once running, your Telegram bot will respond to these commands:
+### Environment Variables
 
-### Basic Commands
-- `/help` - Show all available commands
-- `/proposals` - List active governance proposals
-- `/power` - Show your voting power and delegations
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PRIVATE_KEY` | Wallet private key for signing transactions | Optional* |
+| `TELEGRAM_BOT_TOKEN` | Bot token from @BotFather | Optional |
+| `GEMINI_API_KEY` | Google AI API key | Optional |
+| `NODE_ENV` | Set to 'production' for live monitoring | Optional |
 
-### Voting Commands
-- `/vote <id> <yes|no|abstain|no_with_veto>` - Vote on a proposal
-- `/analyze <id>` - Get AI analysis of a proposal
+*If no private key is provided, the agent will attempt to use Sei Global Wallet (browser extension).
 
-### Examples
+### Getting API Keys
+
+1. **Telegram Bot Token**:
+   - Message @BotFather on Telegram
+   - Use `/newbot` command and follow instructions
+   - Copy the token to your `.env` file
+
+2. **Gemini API Key**:
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create a new API key
+   - Copy the key to your `.env` file
+
+## 🎯 Usage Examples
+
+### Basic Voting
+
+```typescript
+import { VotingAgent } from './src/voting-agent.js';
+
+const agent = new VotingAgent({
+  name: 'My Governance Bot',
+  description: 'Personal governance assistant',
+  network: 'testnet',
+  privateKey: 'your-private-key',
+  geminiApiKey: 'your-api-key'
+});
+
+await agent.initialize();
+
+// Get active proposals
+const proposals = await agent.getActiveProposals();
+
+// Analyze proposal with AI
+const analysis = await agent.analyzeProposal(proposals[0].id);
+console.log('AI Recommendation:', analysis.recommendation);
+
+// Cast vote
+await agent.vote(proposals[0].id, 'yes');
 ```
-/proposals
-/analyze 42
-/vote 42 yes
-/power
+
+### Portfolio-Integrated Governance
+
+```typescript
+// Get comprehensive portfolio analysis
+const analytics = await agent.getPortfolioAnalytics();
+
+// Check how proposals might affect your holdings
+const portfolioValue = analytics.portfolioSnapshot.totalValue;
+const stakingRewards = analytics.portfolioSnapshot.performance.totalRewards;
+
+console.log(`Portfolio Value: $${portfolioValue}`);
+console.log(`Annual Rewards: ${stakingRewards}%`);
 ```
 
-## Architecture
+### Automated Monitoring
+
+```typescript
+// Start continuous governance monitoring
+const monitor = await agent.startGovernanceMonitoring(30); // Check every 30 minutes
+
+// The agent will:
+// - Monitor for new proposals
+// - Send Telegram notifications
+// - Provide AI analysis
+// - Track voting deadlines
+
+// Stop monitoring
+monitor.stop();
+```
+
+## 🏗️ Architecture
+
+The voting agent is built using the Sei Agent Studio modular architecture:
 
 ```
-src/
-├── agents/
-│   └── voting-agent.ts      # Main agent orchestrator
-├── services/
-│   ├── notification-service.ts    # Telegram notifications
-│   ├── governance-service.ts      # Governance data & analytics
-│   └── analytics-service.ts       # Voting insights & metrics
-└── index.ts                       # Application entry point
+VotingAgent
+├── @sei-code/core          # Agent framework and capabilities
+├── @sei-code/wallets       # Wallet management (Sei Global, MetaMask, Private Key)
+├── @sei-code/precompiles   # Governance, staking, and other precompiles
+├── @sei-code/social        # Telegram bot integration
+├── @sei-code/models        # AI models (Gemini, Claude, OpenAI)
+└── @sei-code/analytics     # Portfolio and performance analytics
 ```
 
 ### Key Components
 
-- **VotingAgent**: Core orchestrator that coordinates all services
-- **NotificationService**: Handles Telegram bot communication
-- **GovernanceService**: Fetches governance data and provides analytics
-- **AnalyticsService**: Tracks voting patterns and generates insights
+1. **VotingAgent**: Main orchestrator class
+2. **SeiPrecompileManager**: Governance operations via Sei precompiles
+3. **TelegramBotPlatform**: Social notifications and commands
+4. **AnalyticsAgent**: Portfolio and market analysis
+5. **AIModel**: Proposal analysis and recommendations
 
-## AI Analysis Features
+## 📊 Governance Features
 
-The agent provides intelligent analysis of governance proposals:
+### Proposal Analysis
 
-- **Proposal Summarization**: Clear, concise summaries of complex proposals
-- **Impact Assessment**: Analysis of potential ecosystem effects
-- **Voting Recommendations**: AI-powered suggestions with reasoning
-- **Risk Analysis**: Identification of potential risks and benefits
+The agent provides comprehensive analysis including:
 
-Example AI analysis output:
-```
-📊 Proposal Analysis #42
+- **Executive Summary**: Clear overview of the proposal
+- **Technical Impact**: How it affects Sei's protocol
+- **Economic Impact**: Financial implications for holders
+- **Risk Assessment**: Potential risks and benefits
+- **Voting Recommendation**: AI-powered suggestion with reasoning
 
-Title: Sei Network Validator Commission Adjustment
+### Smart Voting
 
-AI Analysis:
-This proposal seeks to adjust the maximum validator commission 
-rate from 5% to 7%. The change would:
+- **Safety Checks**: Validates proposals before voting
+- **Portfolio Context**: Considers your holdings when recommending votes
+- **Execution Tracking**: Monitors transaction status and provides confirmations
+- **Notification System**: Alerts via Telegram when votes are cast
 
-1. Give validators more flexibility in commission rates
-2. Potentially attract new validators to the network
-3. May slightly increase delegation costs for users
+### Monitoring & Alerts
 
-Recommendation: YES - Benefits network decentralization
-```
+- **New Proposal Detection**: Immediate alerts for new governance proposals
+- **Voting Deadline Tracking**: Reminders before voting periods close  
+- **Result Notifications**: Updates when voting concludes
+- **Participation Analytics**: Track your governance engagement over time
 
-## Monitoring & Alerts
+## 🔒 Security & Best Practices
 
-The agent automatically monitors for:
+### Private Key Management
 
-- 🆕 **New Proposals**: Instant notifications when proposals are submitted
-- ⏰ **Voting Deadlines**: Reminders 24 hours before voting ends
-- 📈 **Voting Progress**: Updates on proposal voting progress
-- 🏆 **Results**: Final voting results and outcomes
+- **Environment Variables**: Never hardcode private keys
+- **File Permissions**: Ensure `.env` files are properly secured
+- **Wallet Integration**: Prefer browser wallet integration when possible
 
-## Analytics Dashboard
+### Transaction Safety
 
-Get comprehensive insights into:
+- **Simulation**: All transactions are simulated before execution
+- **Confirmation**: Manual approval required for critical operations
+- **Gas Management**: Automatic gas estimation and optimization
+- **Error Handling**: Comprehensive error catching and reporting
 
-- **Voting Patterns**: Your historical voting behavior
-- **Participation Rates**: How active you are in governance
-- **Governance Health**: Overall network governance metrics
-- **Validator Behavior**: How validators are voting on proposals
+### AI Analysis Disclaimer
 
-## Deployment
+- AI recommendations are for informational purposes only
+- Always conduct your own research before voting
+- Consider multiple perspectives and community discussions
+- The agent provides insights, not financial advice
 
-### Testnet Deployment
-```bash
-NETWORK=testnet pnpm run deploy
-```
+## 🤝 Contributing
 
-### Mainnet Deployment
-```bash
-NETWORK=mainnet pnpm run deploy --start
-```
+This example demonstrates the capabilities of the Sei Agent Studio framework. To extend or customize:
 
-The deploy script will:
-1. ✅ Validate all configuration
-2. 🏗️ Build the application
-3. 🧪 Run tests (if available)
-4. 📦 Create deployment package
-5. 🚀 Optionally start the service
-6. 🏥 Run health checks
+1. **Add New Capabilities**: Implement additional agent capabilities
+2. **Extend AI Analysis**: Improve proposal analysis algorithms
+3. **Custom Notifications**: Add Discord, Slack, or email notifications  
+4. **Advanced Strategies**: Implement voting strategies based on portfolio composition
 
-## Development
+## 📈 Roadmap
 
-### Project Structure
-```
-voting-app/
-├── src/
-│   ├── agents/           # Core agent logic
-│   ├── services/         # Supporting services
-│   └── index.ts          # Main entry point
-├── scripts/
-│   └── deploy.ts         # Deployment automation
-├── package.json          # Dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-├── .env.example          # Environment template
-└── README.md             # This file
-```
+Potential future enhancements:
 
-### Adding New Features
+- [ ] Multi-signature governance support
+- [ ] Advanced voting strategies (portfolio-weighted, etc.)
+- [ ] Cross-chain governance integration
+- [ ] DAO tooling integration
+- [ ] Governance analytics dashboard
+- [ ] Mobile app integration
 
-1. **New Telegram Commands**: Add handlers in `voting-agent.ts`
-2. **AI Analysis**: Extend prompts in the `analyzeProposal` capability
-3. **Notifications**: Add new notification types in `notification-service.ts`
-4. **Analytics**: Extend metrics in `analytics-service.ts`
+## 🆘 Support
 
-### Testing
+- **Documentation**: Check the main Sei Agent Studio docs
+- **Issues**: Report bugs via GitHub issues
+- **Community**: Join the Sei Discord for discussions
+- **Examples**: See other examples in the `/examples` directory
 
-```bash
-# Run tests (if test script exists)
-pnpm test
+## 📄 License
 
-# Test Telegram bot locally
-pnpm dev
-# Send /help to your bot
-```
+MIT License - see LICENSE file for details.
 
-## Troubleshooting
+---
 
-### Common Issues
-
-**Bot not responding**
-- Verify `TELEGRAM_BOT_TOKEN` is correct
-- Check that chat ID matches your Telegram user/group
-- Ensure bot has been started with `/start` command
-
-**Voting fails**
-- Check wallet has sufficient SEI for transaction fees
-- Verify private key is correct and has voting power
-- Ensure proposal ID exists and voting is still active
-
-**AI analysis not working**
-- Verify API key for your chosen model provider
-- Check API quotas and billing status
-- Try switching model providers in `.env`
-
-### Logs and Debugging
-
-The agent provides detailed logging:
-- 📱 Telegram interactions
-- 🗳️ Voting transactions
-- 🤖 AI analysis requests
-- ❌ Errors and warnings
-
-Monitor logs for troubleshooting:
-```bash
-# Development mode shows all logs
-pnpm dev
-
-# Production logs
-pnpm start 2>&1 | tee voting-agent.log
-```
-
-## Security Notes
-
-- 🔐 Never commit `.env` file to version control
-- 🔑 Store private keys securely (consider hardware wallets for mainnet)
-- 📱 Use Telegram bot in private chats only for sensitive operations
-- 🔄 Regularly rotate API keys and tokens
-- 🎯 Test thoroughly on testnet before mainnet deployment
-
-## Contributing
-
-This example demonstrates the power of the Sei Agent Studio packages. You can:
-
-1. Fork and customize for your governance needs
-2. Add new AI model integrations
-3. Extend analytics and reporting
-4. Integrate with other Sei ecosystem tools
-5. Build additional notification channels
-
-## Support
-
-- 📚 [Sei Agent Studio Documentation](../../README.md)
-- 🐛 [Report Issues](https://github.com/sei-agent-studio/issues)
-- 💬 [Community Discord](https://discord.gg/sei)
-- 📖 [Sei Network Docs](https://docs.sei.io)
-
-Built with ❤️ using [Sei Agent Studio](https://github.com/sei-agent-studio)
+**⚠️ Disclaimer**: This is example code for educational purposes. Always test thoroughly on testnet before using with real funds. The authors are not responsible for any losses incurred through the use of this software.

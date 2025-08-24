@@ -20,8 +20,9 @@ export function createGenerateCommand(): Command {
     .option('--dry-run', 'Show what would be generated without creating files', false)
     .option('-v, --verbose', 'Verbose output', false)
     .action(async (description: string, options: CLIOptions) => {
+      let spinner: any;
       try {
-        const spinner = ora('🤖 Analyzing your description...').start();
+        spinner = ora('🤖 Analyzing your description...').start();
         
         const analyzer = new NaturalLanguageAnalyzer();
         const analysis = analyzer.analyze(description);
@@ -89,12 +90,12 @@ export function createGenerateCommand(): Command {
         }
         
         // Generate the project
-        spinner.start('🏗️  Generating project...');
+        spinner = ora('🏗️ Generating project structure...').start();
         
         const generator = new ProjectGenerator();
         await generator.generateProject(generationOptions, analysis);
         
-        spinner.succeed(chalk.green(`✅ Generated: ${outputDir}/`));
+        spinner.succeed(chalk.green(`✅ Project generated successfully!`));
         
         // Show next steps
         console.log('\n🚀 Next Steps:');

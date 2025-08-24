@@ -4,24 +4,24 @@
   "description": "A comprehensive agent framework for Sei blockchain with natural language dApp generation",
   "private": true,
   "workspaces": [
-    "packages/*",
-    "examples/*",
-    "templates/*"
+    "packages/*"
   ],
   "scripts": {
-    "build": "tsc -b",
-    "test": "pnpm -r test",
-    "dev": "pnpm -r dev",
-    "clean": "pnpm -r clean && rm -rf node_modules && rm -rf packages/*/dist",
-    "typecheck": "tsc -b --noEmit",
-    "lint": "pnpm -r lint",
+    "build": "turbo build",
+    "test": "turbo test",
+    "dev": "turbo dev",
+    "clean": "turbo clean && rm -rf node_modules && rm -rf packages/*/dist",
+    "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
+    "deploy": "turbo deploy",
     "publish-packages": "pnpm -r publish --access public"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "@vitest/ui": "^1.0.0",
+    "turbo": "^2.5.6",
     "typescript": "^5.3.0",
-    "vitest": "^1.0.0",
-    "@vitest/ui": "^1.0.0"
+    "vitest": "^1.0.0"
   },
   "engines": {
     "node": ">=18.0.0",

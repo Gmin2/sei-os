@@ -26,32 +26,50 @@ export class ProjectGenerator {
   async generateProject(options: GenerationOptions, analysis: AnalyzedRequest): Promise<void> {
     const { projectName, outputDir, template, packages, features, network, integrations } = options;
     
-    // Ensure output directory doesn't exist
-    if (await fs.pathExists(outputDir)) {
-      throw new Error(`Directory ${outputDir} already exists`);
-    }
+    try {
+      // Validate inputs
+      this.validateGenerationOptions(options);
+      
+      // Ensure output directory doesn't exist
+      if (await fs.pathExists(outputDir)) {
+        throw new Error(`Directory ${outputDir} already exists. Please choose a different name or remove the existing directory.`);
+      }
 
-    // Create base project structure
-    await this.createBaseStructure(outputDir, projectName);
-    
-    // Generate package.json
-    await this.generatePackageJson(outputDir, projectName, packages, analysis);
-    
-    // Generate TypeScript config
-    await this.generateTsConfig(outputDir);
-    
-    // Generate main application files
-    await this.generateApplicationFiles(outputDir, template, packages, features, integrations, network);
-    
-    // Generate documentation
-    await this.generateDocumentation(outputDir, projectName, analysis, options);
-    
-    // Generate deployment scripts
-    await this.generateDeploymentScripts(outputDir, network);
-    
-    // Install dependencies if requested
-    if (!options.skipInstall) {
-      await this.installDependencies(outputDir);
+      // Create base project structure
+      await this.createBaseStructure(outputDir, projectName);
+      
+      // Generate package.json
+      await this.generatePackageJson(outputDir, projectName, packages, analysis);
+      
+      // Generate TypeScript config
+      await this.generateTsConfig(outputDir);
+      
+      // Generate main application files
+      await this.generateApplicationFiles(outputDir, template, packages, features, integrations, network);
+      
+      // Generate documentation
+      await this.generateDocumentation(outputDir, projectName, analysis, options);
+      
+      // Generate deployment scripts
+      await this.generateDeploymentScripts(outputDir, network);
+      
+      // Generate gitignore and other config files
+      await this.generateConfigFiles(outputDir);
+      
+      // Install dependencies if requested
+      if (!options.skipInstall) {
+        await this.installDependencies(outputDir);
+      }
+      
+      // Validate generated project
+      await this.validateGeneratedProject(outputDir);
+      
+    } catch (error) {
+      // Cleanup on failure
+      if (await fs.pathExists(outputDir)) {
+        await fs.remove(outputDir).catch(() => {}); // Ignore cleanup errors
+      }
+      throw error;
     }
   }
 
@@ -229,6 +247,17 @@ export class ProjectGenerator {
 
     const content = `${imports}
 
+// Global error handlers
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 async function main() {
   try {
     console.log('🤖 Starting Sei Agent...');
@@ -240,21 +269,44 @@ async function main() {
     // Start the agent
     await agent.start();
     console.log('✅ Agent started successfully!');
+    console.log('🌐 Network:', process.env.SEI_NETWORK || 'testnet');
+    console.log('📍 Press Ctrl+C to stop the agent');
     
     // Keep the process running
     process.on('SIGINT', async () => {
       console.log('\\n🛑 Shutting down agent...');
-      await agent.stop();
+      try {
+        await agent.stop();
+        console.log('✅ Agent stopped gracefully');
+      } catch (error) {
+        console.error('❌ Error during shutdown:', error);
+      }
+      process.exit(0);
+    });
+    
+    process.on('SIGTERM', async () => {
+      console.log('\\n🛑 Received SIGTERM, shutting down...');
+      try {
+        await agent.stop();
+      } catch (error) {
+        console.error('❌ Error during shutdown:', error);
+      }
       process.exit(0);
     });
     
   } catch (error) {
     console.error('❌ Failed to start agent:', error);
+    if (error instanceof Error && error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
     process.exit(1);
   }
 }
 
-main().catch(console.error);`;
+main().catch((error) => {
+  console.error('❌ Fatal error:', error);
+  process.exit(1);
+});`;
 
     await fs.writeFile(path.join(outputDir, 'src/index.ts'), content);
   }
@@ -280,7 +332,8 @@ main().catch(console.error);`;
           imports.push("import { GeminiModel } from '@sei-code/models';");
           break;
         case 'governance':
-          imports.push("import { GovernanceAgent } from '@sei-code/governance';");
+          // Governance functionality is in precompiles
+          imports.push("import { GovernancePrecompile } from '@sei-code/precompiles';");
           break;
         case 'nft':
           imports.push("import { ERC721Agent } from '@sei-code/nft';");
@@ -371,9 +424,15 @@ main().catch(console.error);`;
       capabilities: packages,
       features,
       settings: {
-        logLevel: 'info',
-        retryAttempts: 3,
-        timeout: 30000
+        logLevel: process.env.LOG_LEVEL || 'info',
+        retryAttempts: parseInt(process.env.RETRY_ATTEMPTS || '3'),
+        timeout: parseInt(process.env.TIMEOUT || '30000'),
+        maxConcurrentOperations: 10,
+        rateLimitPerSecond: 5
+      },
+      endpoints: {
+        rpc: process.env.SEI_RPC_URL || 'https://rpc.sei-apis.com',
+        chainId: process.env.SEI_CHAIN_ID || 'sei-chain'
       }
     };
 
@@ -453,26 +512,50 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here
 
   private async generateVotingAppFiles(outputDir: string, packages: string[]): Promise<void> {
     const agentContent = `import { SeiAgent, AgentCapability } from '@sei-code/core';
-import { GovernanceAgent } from '@sei-code/governance';
+import { GovernancePrecompile } from '@sei-code/precompiles';
 
 export class VotingAgent extends AgentCapability {
-  private governance: GovernanceAgent;
+  private governance: GovernancePrecompile;
 
   constructor(agent: SeiAgent) {
     super('voting-agent', agent);
-    this.governance = new GovernanceAgent(agent);
+    this.governance = new GovernancePrecompile(agent.provider);
   }
 
   async getActiveProposals() {
-    return await this.governance.getActiveProposals();
+    try {
+      return await this.governance.getProposals();
+    } catch (error) {
+      this.agent.emit('error', 'Failed to fetch proposals', error);
+      throw error;
+    }
   }
 
-  async vote(proposalId: string, option: 'yes' | 'no' | 'abstain') {
-    return await this.governance.vote(proposalId, option);
+  async vote(proposalId: string, option: 'yes' | 'no' | 'abstain' | 'no-with-veto') {
+    try {
+      return await this.governance.vote(proposalId, option);
+    } catch (error) {
+      this.agent.emit('error', 'Failed to submit vote', error);
+      throw error;
+    }
   }
 
   async getVotingPower(address: string) {
-    return await this.governance.getVotingPower(address);
+    try {
+      return await this.governance.getVotingPower(address);
+    } catch (error) {
+      this.agent.emit('error', 'Failed to get voting power', error);
+      throw error;
+    }
+  }
+
+  async getProposalDetails(proposalId: string) {
+    try {
+      return await this.governance.getProposal(proposalId);
+    } catch (error) {
+      this.agent.emit('error', 'Failed to get proposal details', error);
+      throw error;
+    }
   }
 }`;
 
@@ -764,6 +847,216 @@ This project was generated using [Sei AI Studio](https://github.com/sei-agent-st
     await fs.writeFile(path.join(outputDir, 'README.md'), readme);
   }
 
+  private validateGenerationOptions(options: GenerationOptions): void {
+    if (!options.projectName || options.projectName.trim().length === 0) {
+      throw new Error('Project name cannot be empty');
+    }
+
+    if (!/^[a-z0-9-_]+$/i.test(options.projectName)) {
+      throw new Error('Project name can only contain letters, numbers, hyphens, and underscores');
+    }
+
+    if (!options.outputDir || options.outputDir.trim().length === 0) {
+      throw new Error('Output directory cannot be empty');
+    }
+
+    if (!options.packages || options.packages.length === 0) {
+      throw new Error('At least one package must be specified');
+    }
+
+    const validNetworks = ['mainnet', 'testnet', 'devnet'];
+    if (!validNetworks.includes(options.network)) {
+      throw new Error(`Invalid network: ${options.network}. Must be one of: ${validNetworks.join(', ')}`);
+    }
+  }
+
+  private async generateConfigFiles(outputDir: string): Promise<void> {
+    // Generate .gitignore
+    const gitignore = `# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Snowpack dependency directory
+web_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db`;
+
+    await fs.writeFile(path.join(outputDir, '.gitignore'), gitignore);
+
+    // Generate ESLint config
+    const eslintConfig = {
+      parser: '@typescript-eslint/parser',
+      extends: [
+        'eslint:recommended',
+        '@typescript-eslint/recommended'
+      ],
+      plugins: ['@typescript-eslint'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/no-unused-vars': 'error',
+        'no-console': 'warn'
+      },
+      env: {
+        node: true,
+        es2022: true
+      }
+    };
+
+    await fs.writeJson(path.join(outputDir, '.eslintrc.json'), eslintConfig, { spaces: 2 });
+
+    // Generate prettier config
+    const prettierConfig = {
+      semi: true,
+      trailingComma: 'es5',
+      singleQuote: true,
+      printWidth: 100,
+      tabWidth: 2,
+      useTabs: false
+    };
+
+    await fs.writeJson(path.join(outputDir, '.prettierrc'), prettierConfig, { spaces: 2 });
+  }
+
+  private async validateGeneratedProject(outputDir: string): Promise<void> {
+    const requiredFiles = [
+      'package.json',
+      'tsconfig.json',
+      'src/index.ts',
+      '.env.example',
+      'README.md'
+    ];
+
+    for (const file of requiredFiles) {
+      const filePath = path.join(outputDir, file);
+      if (!await fs.pathExists(filePath)) {
+        throw new Error(`Required file missing: ${file}`);
+      }
+    }
+
+    // Validate package.json
+    try {
+      const packageJson = await fs.readJson(path.join(outputDir, 'package.json'));
+      if (!packageJson.name || !packageJson.scripts || !packageJson.dependencies) {
+        throw new Error('Generated package.json is invalid');
+      }
+    } catch (error) {
+      throw new Error(`Invalid package.json: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    // Validate TypeScript config
+    try {
+      const tsConfig = await fs.readJson(path.join(outputDir, 'tsconfig.json'));
+      if (!tsConfig.compilerOptions) {
+        throw new Error('Generated tsconfig.json is invalid');
+      }
+    } catch (error) {
+      throw new Error(`Invalid tsconfig.json: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
   private async generateDeploymentScripts(outputDir: string, network: string): Promise<void> {
     const scriptsDir = path.join(outputDir, 'scripts');
     await fs.ensureDir(scriptsDir);
@@ -810,20 +1103,37 @@ deploy().catch(console.error);`;
     const { spawn } = await import('child_process');
     
     return new Promise((resolve, reject) => {
-      const npm = spawn('npm', ['install'], {
+      // Try pnpm first, then npm
+      const packageManager = process.env.npm_config_user_agent?.includes('pnpm') ? 'pnpm' : 'npm';
+      const installCmd = packageManager === 'pnpm' ? ['install'] : ['install'];
+      
+      const installer = spawn(packageManager, installCmd, {
         cwd: outputDir,
         stdio: 'pipe'
       });
 
-      npm.on('close', (code) => {
+      let stdout = '';
+      let stderr = '';
+
+      installer.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      installer.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      installer.on('close', (code) => {
         if (code === 0) {
           resolve();
         } else {
-          reject(new Error(`npm install failed with code ${code}`));
+          reject(new Error(`${packageManager} install failed with code ${code}\nStdout: ${stdout}\nStderr: ${stderr}`));
         }
       });
 
-      npm.on('error', reject);
+      installer.on('error', (error) => {
+        reject(new Error(`Failed to start ${packageManager}: ${error.message}`));
+      });
     });
   }
 
