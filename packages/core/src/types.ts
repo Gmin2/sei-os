@@ -15,6 +15,8 @@ export interface SeiWallet {
   connect(): Promise<void>;
   getBalance(denom: string): Promise<string>;
   signTransaction(tx: any): Promise<string>;
+  getEthersProvider(): any;
+  getEthersSigner(): any;
 }
 
 export interface AgentCapability {

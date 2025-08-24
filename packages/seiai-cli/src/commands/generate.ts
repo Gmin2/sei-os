@@ -45,7 +45,7 @@ export function createGenerateCommand(): Command {
         // Merge CLI options with analysis
         const packages = [
           ...analysis.packages.map(p => p.name),
-          ...(options.packages ? options.packages.split(',').map(p => p.trim()) : [])
+          ...(options.packages ? options.packages : [])
         ];
         
         const generationOptions = {
@@ -54,7 +54,7 @@ export function createGenerateCommand(): Command {
           template: options.template || getTemplateForProjectType(analysis.projectType),
           packages: [...new Set(packages)], // Remove duplicates
           features: analysis.features,
-          network: options.network || 'testnet',
+          network: (options.network as 'mainnet' | 'testnet' | 'devnet') || 'testnet',
           integrations: analysis.integrations,
           skipInstall: options.skipInstall || false,
           dryRun: options.dryRun || false
@@ -105,7 +105,7 @@ export function createGenerateCommand(): Command {
         console.log(chalk.cyan('  npm run dev'));
         console.log(chalk.cyan('  seiai deploy --network testnet'));
         
-      } catch (error) {
+      } catch (error: any) {
         console.error(chalk.red(`❌ Failed to generate project: ${error.message}`));
         if (options.verbose) {
           console.error(error.stack);

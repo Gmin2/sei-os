@@ -1,4 +1,4 @@
-import { SeiAgent, AgentCapability } from '@sei-code/core';
+import { SeiAgent, BaseCapability } from '@sei-code/core';
 import { SeiWallet } from '@sei-code/wallets';
 import { TransactionBuilder } from '@sei-code/transactions';
 import { ethers } from 'ethers';
@@ -26,12 +26,35 @@ const ERC1155_ABI = [
   'event URI(string value, uint256 indexed id)'
 ];
 
-export class ERC1155Agent extends AgentCapability {
+export class ERC1155Agent extends BaseCapability {
+  private agent: SeiAgent;
+  private wallet: SeiWallet;
   private provider: ethers.Provider;
 
   constructor(agent: SeiAgent, wallet: SeiWallet) {
-    super('erc1155', agent);
+    super('erc1155', 'ERC1155 multi-token operations and management');
+    this.agent = agent;
+    this.wallet = wallet;
     this.provider = wallet.getEthersProvider();
+  }
+
+  async execute(params: any): Promise<any> {
+    const { action, ...args } = params;
+
+    switch (action) {
+      case 'getCollection':
+        return this.getCollection(args.contractAddress);
+      case 'getToken':
+        return this.getToken(args.contractAddress, args.tokenId);
+      case 'getBalance':
+        return this.getBalance(args.contractAddress, args.owner, args.tokenId);
+      case 'transfer':
+        return this.transferToken(args.contractAddress, args);
+      case 'batchTransfer':
+        return this.batchTransfer(args.contractAddress, args);
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
   }
 
   async getCollection(collectionAddress: string): Promise<NFTCollection> {
@@ -68,7 +91,7 @@ export class ERC1155Agent extends AgentCapability {
         return null;
       }
 
-      let metadata = null;
+      let metadata: any = undefined;
       if (uri) {
         try {
           const response = await fetch(uri);
@@ -134,7 +157,7 @@ export class ERC1155Agent extends AgentCapability {
       const accounts = new Array(tokenIds.length).fill(owner);
       const balances = await contract.balanceOfBatch(accounts, tokenIds);
       
-      const results = [];
+      const results: any[] = [];
       
       for (let i = 0; i < tokenIds.length; i++) {
         const balance = Number(balances[i]);
@@ -170,7 +193,7 @@ export class ERC1155Agent extends AgentCapability {
       const contract = new ethers.Contract(
         collectionAddress,
         ERC1155_ABI,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
       
       const data = options.data || '0x';
@@ -200,7 +223,7 @@ export class ERC1155Agent extends AgentCapability {
       const contract = new ethers.Contract(
         collectionAddress,
         ERC1155_ABI,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
       
       const amounts = options.amounts || new Array(options.tokenIds.length).fill(1);
@@ -236,7 +259,7 @@ export class ERC1155Agent extends AgentCapability {
       const contract = new ethers.Contract(
         collectionAddress,
         ERC1155_ABI,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
       
       const tx = await contract.setApprovalForAll(operator, approved);
@@ -304,34 +327,38 @@ export class ERC1155Agent extends AgentCapability {
       const transfers: NFTTransfer[] = [];
       
       singleEvents.forEach(event => {
-        transfers.push({
-          from: event.args.from,
-          to: event.args.to,
-          tokenId: event.args.id.toString(),
-          collection: collectionAddress,
-          transactionHash: event.transactionHash,
-          blockNumber: event.blockNumber,
-          timestamp: new Date().toISOString(),
-          value: event.args.value.toString()
-        });
+        if ('args' in event) {
+          transfers.push({
+            from: event.args.from,
+            to: event.args.to,
+            tokenId: event.args.id.toString(),
+            collection: collectionAddress,
+            transactionHash: event.transactionHash,
+            blockNumber: event.blockNumber,
+            timestamp: new Date().toISOString(),
+            value: event.args.value.toString()
+          });
+        }
       });
       
       batchEvents.forEach(event => {
-        const ids = event.args.ids;
-        const values = event.args.values;
-        
-        for (let i = 0; i < ids.length; i++) {
-          if (!tokenId || ids[i].toString() === tokenId) {
-            transfers.push({
-              from: event.args.from,
-              to: event.args.to,
-              tokenId: ids[i].toString(),
-              collection: collectionAddress,
-              transactionHash: event.transactionHash,
-              blockNumber: event.blockNumber,
-              timestamp: new Date().toISOString(),
-              value: values[i].toString()
-            });
+        if ('args' in event) {
+          const ids = event.args.ids;
+          const values = event.args.values;
+          
+          for (let i = 0; i < ids.length; i++) {
+            if (!tokenId || ids[i].toString() === tokenId) {
+              transfers.push({
+                from: event.args.from,
+                to: event.args.to,
+                tokenId: ids[i].toString(),
+                collection: collectionAddress,
+                transactionHash: event.transactionHash,
+                blockNumber: event.blockNumber,
+                timestamp: new Date().toISOString(),
+                value: values[i].toString()
+              });
+            }
           }
         }
       });

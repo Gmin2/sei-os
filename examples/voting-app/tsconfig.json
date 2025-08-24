@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "module": "ESNext",
+    "target": "ES2022",
+    "moduleResolution": "node"
+  },
+  "include": ["src/**/*", "scripts/**/*"],
+  "exclude": ["dist", "node_modules"],
+  "references": [
+    { "path": "../../packages/core" },
+    { "path": "../../packages/governance" },
+    { "path": "../../packages/wallets" },
+    { "path": "../../packages/precompiles" },
+    { "path": "../../packages/social" },
+    { "path": "../../packages/models" },
+    { "path": "../../packages/analytics" }
+  ]
+}

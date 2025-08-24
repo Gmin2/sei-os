@@ -1,4 +1,4 @@
-import { SeiAgent, AgentCapability } from '@sei-code/core';
+import { SeiAgent, BaseCapability } from '@sei-code/core';
 import { SeiPrecompileManager } from '@sei-code/precompiles';
 import type { 
   TokenBalance, 
@@ -35,13 +35,28 @@ interface PerformanceMetrics {
   diversificationScore: number;
 }
 
-export class PortfolioAnalyzer extends AgentCapability {
+export class PortfolioAnalyzer extends BaseCapability {
   private precompiles: SeiPrecompileManager;
   private snapshots: Map<string, PortfolioSnapshot[]> = new Map();
+  private agent: SeiAgent;
 
   constructor(agent: SeiAgent, precompiles: SeiPrecompileManager) {
-    super('portfolio-analyzer', agent);
+    super('portfolio-analyzer', 'Portfolio analysis and tracking');
+    this.agent = agent;
     this.precompiles = precompiles;
+  }
+
+  async execute(params: any): Promise<any> {
+    const { action, ...args } = params;
+    
+    switch (action) {
+      case 'analyzePortfolio':
+        return this.analyzePortfolio(args.userAddress);
+      case 'comparePortfolios':
+        return this.comparePortfolios([args.address1, args.address2]);
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
   }
 
   async analyzePortfolio(userAddress: string): Promise<PortfolioSnapshot> {

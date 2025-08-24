@@ -120,7 +120,7 @@ export function createEnhanceCommand(): Command {
         console.log(chalk.cyan('  npm run build'));
         console.log(chalk.cyan('  npm run dev'));
         
-      } catch (error) {
+      } catch (error: any) {
         console.error(chalk.red(`❌ Failed to enhance project: ${error.message}`));
         if (options.verbose) {
           console.error(error.stack);

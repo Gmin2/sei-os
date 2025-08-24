@@ -1,0 +1,355 @@
+{
+  "name": "social-bot",
+  "displayName": "AI Social Bot",
+  "description": "Intelligent social media bot with AI conversations, blockchain integration, and community management features",
+  "version": "1.0.0", 
+  "category": "social",
+  "packages": [
+    "@sei-code/core",
+    "@sei-code/social",
+    "@sei-code/models",
+    "@sei-code/wallets",
+    "@sei-code/precompiles",
+    "@sei-code/x402"
+  ],
+  "features": [
+    "AI-powered conversations",
+    "blockchain wallet integration", 
+    "community management",
+    "payment processing",
+    "multi-platform support",
+    "custom command system",
+    "user analytics",
+    "content moderation"
+  ],
+  "integrations": [
+    "telegram",
+    "discord",
+    "twitter",
+    "gemini",
+    "claude",
+    "openai",
+    "x402-payments"
+  ],
+  "variables": {
+    "projectName": {
+      "type": "string",
+      "description": "Name of your social bot project",
+      "default": "Sei Social Bot",
+      "required": true
+    },
+    "botPersonality": {
+      "type": "enum",
+      "description": "Bot personality and conversation style",
+      "options": ["helpful", "friendly", "professional", "casual", "witty"],
+      "default": "helpful",
+      "required": true
+    },
+    "platforms": {
+      "type": "multiselect",
+      "description": "Social platforms to support",
+      "options": ["telegram", "discord", "twitter"],
+      "default": ["telegram"],
+      "required": true
+    },
+    "aiProvider": {
+      "type": "enum", 
+      "description": "AI model provider for conversations",
+      "options": ["gemini", "claude", "openai"],
+      "default": "gemini",
+      "required": true
+    },
+    "walletIntegration": {
+      "type": "boolean",
+      "description": "Enable blockchain wallet features",
+      "default": true,
+      "required": true
+    },
+    "paymentFeatures": {
+      "type": "boolean",
+      "description": "Enable payment and tipping features",
+      "default": false,
+      "required": false
+    },
+    "communityFeatures": {
+      "type": "boolean", 
+      "description": "Enable community management features",
+      "default": true,
+      "required": false
+    },
+    "contentModeration": {
+      "type": "boolean",
+      "description": "Enable AI-powered content moderation",
+      "default": false,
+      "required": false
+    },
+    "analytics": {
+      "type": "boolean",
+      "description": "Enable user analytics and insights",
+      "default": true,
+      "required": false
+    },
+    "customCommands": {
+      "type": "boolean",
+      "description": "Enable custom command system",
+      "default": true,
+      "required": false
+    },
+    "responseDelay": {
+      "type": "number",
+      "description": "Response delay in milliseconds (0 for instant)",
+      "default": 1000,
+      "min": 0,
+      "max": 5000,
+      "required": false
+    }
+  },
+  "environmentVariables": [
+    {
+      "name": "TELEGRAM_BOT_TOKEN",
+      "description": "Telegram bot token from @BotFather",
+      "required": "{{ platforms.includes('telegram') }}",
+      "secret": true
+    },
+    {
+      "name": "DISCORD_BOT_TOKEN",
+      "description": "Discord bot token",
+      "required": "{{ platforms.includes('discord') }}",
+      "secret": true
+    },
+    {
+      "name": "TWITTER_API_KEY",
+      "description": "Twitter API key",
+      "required": "{{ platforms.includes('twitter') }}",
+      "secret": true
+    },
+    {
+      "name": "TWITTER_API_SECRET",
+      "description": "Twitter API secret",
+      "required": "{{ platforms.includes('twitter') }}",
+      "secret": true
+    },
+    {
+      "name": "TWITTER_ACCESS_TOKEN",
+      "description": "Twitter access token", 
+      "required": "{{ platforms.includes('twitter') }}",
+      "secret": true
+    },
+    {
+      "name": "TWITTER_ACCESS_SECRET",
+      "description": "Twitter access token secret",
+      "required": "{{ platforms.includes('twitter') }}",
+      "secret": true
+    },
+    {
+      "name": "GEMINI_API_KEY",
+      "description": "Google Gemini API key",
+      "required": "{{ aiProvider === 'gemini' }}",
+      "secret": true
+    },
+    {
+      "name": "CLAUDE_API_KEY",
+      "description": "Anthropic Claude API key", 
+      "required": "{{ aiProvider === 'claude' }}",
+      "secret": true
+    },
+    {
+      "name": "OPENAI_API_KEY",
+      "description": "OpenAI API key",
+      "required": "{{ aiProvider === 'openai' }}",
+      "secret": true
+    },
+    {
+      "name": "PRIVATE_KEY",
+      "description": "Wallet private key (for blockchain features)",
+      "required": "{{ walletIntegration }}",
+      "secret": true
+    },
+    {
+      "name": "NETWORK",
+      "description": "Sei network (testnet/mainnet)",
+      "required": "{{ walletIntegration }}",
+      "default": "testnet"
+    },
+    {
+      "name": "BOT_PERSONALITY",
+      "description": "Bot personality setting",
+      "required": false,
+      "default": "{{ botPersonality }}"
+    },
+    {
+      "name": "ENABLE_PAYMENTS",
+      "description": "Enable payment features",
+      "required": false,
+      "default": "{{ paymentFeatures ? 'true' : 'false' }}"
+    },
+    {
+      "name": "ENABLE_MODERATION",
+      "description": "Enable content moderation",
+      "required": false,
+      "default": "{{ contentModeration ? 'true' : 'false' }}"
+    },
+    {
+      "name": "ADMIN_USER_IDS",
+      "description": "Comma-separated list of admin user IDs",
+      "required": false,
+      "default": ""
+    }
+  ],
+  "files": [
+    {
+      "path": "package.json",
+      "template": "package.json.hbs",
+      "description": "Project configuration and dependencies"
+    },
+    {
+      "path": "tsconfig.json",
+      "template": "tsconfig.json.hbs",
+      "description": "TypeScript configuration"
+    },
+    {
+      "path": ".env.example",
+      "template": ".env.example.hbs",
+      "description": "Environment variables template"
+    },
+    {
+      "path": "src/index.ts",
+      "template": "src/index.ts.hbs",
+      "description": "Application entry point"
+    },
+    {
+      "path": "src/agents/social-agent.ts",
+      "template": "src/agents/social-agent.ts.hbs",
+      "description": "Main social bot agent"
+    },
+    {
+      "path": "src/platforms/telegram-bot.ts",
+      "template": "src/platforms/telegram-bot.ts.hbs", 
+      "description": "Telegram bot implementation",
+      "condition": "{{ platforms.includes('telegram') }}"
+    },
+    {
+      "path": "src/platforms/discord-bot.ts",
+      "template": "src/platforms/discord-bot.ts.hbs",
+      "description": "Discord bot implementation",
+      "condition": "{{ platforms.includes('discord') }}"
+    },
+    {
+      "path": "src/platforms/twitter-bot.ts", 
+      "template": "src/platforms/twitter-bot.ts.hbs",
+      "description": "Twitter bot implementation",
+      "condition": "{{ platforms.includes('twitter') }}"
+    },
+    {
+      "path": "src/services/conversation-service.ts",
+      "template": "src/services/conversation-service.ts.hbs",
+      "description": "AI conversation management"
+    },
+    {
+      "path": "src/services/wallet-service.ts",
+      "template": "src/services/wallet-service.ts.hbs",
+      "description": "Blockchain wallet integration",
+      "condition": "{{ walletIntegration }}"
+    },
+    {
+      "path": "src/services/payment-service.ts",
+      "template": "src/services/payment-service.ts.hbs",
+      "description": "Payment processing service",
+      "condition": "{{ paymentFeatures }}"
+    },
+    {
+      "path": "src/services/moderation-service.ts",
+      "template": "src/services/moderation-service.ts.hbs",
+      "description": "Content moderation service",
+      "condition": "{{ contentModeration }}"
+    },
+    {
+      "path": "src/services/analytics-service.ts",
+      "template": "src/services/analytics-service.ts.hbs", 
+      "description": "User analytics and insights",
+      "condition": "{{ analytics }}"
+    },
+    {
+      "path": "src/commands/index.ts",
+      "template": "src/commands/index.ts.hbs",
+      "description": "Command registry and handlers",
+      "condition": "{{ customCommands }}"
+    },
+    {
+      "path": "src/commands/basic-commands.ts",
+      "template": "src/commands/basic-commands.ts.hbs",
+      "description": "Basic bot commands",
+      "condition": "{{ customCommands }}"
+    },
+    {
+      "path": "src/commands/wallet-commands.ts",
+      "template": "src/commands/wallet-commands.ts.hbs",
+      "description": "Wallet-related commands",
+      "condition": "{{ walletIntegration && customCommands }}"
+    },
+    {
+      "path": "scripts/deploy.ts",
+      "template": "scripts/deploy.ts.hbs",
+      "description": "Deployment automation script"
+    },
+    {
+      "path": "README.md",
+      "template": "README.md.hbs",
+      "description": "Project documentation"
+    }
+  ],
+  "commands": {
+    "install": "pnpm install",
+    "build": "pnpm build",
+    "dev": "pnpm dev",
+    "start": "pnpm start",
+    "deploy": "pnpm run deploy"
+  },
+  "postInstall": [
+    "echo '✅ Social bot template installed successfully!'",
+    "echo '📝 Next steps:'",
+    "echo '  1. Copy .env.example to .env and add your API keys'",
+    "echo '  2. Configure bot personality and features'",
+    "echo '  3. Run: pnpm dev to start development'",
+    "echo '  4. Test bot commands in your chosen platform'",
+    "echo '🤖 Your AI social bot is ready to engage with users!'"
+  ],
+  "tags": [
+    "social",
+    "bot",
+    "ai",
+    "telegram",
+    "discord",
+    "twitter",
+    "conversation",
+    "community",
+    "sei"
+  ],
+  "screenshots": [
+    "assets/telegram-conversation.png",
+    "assets/discord-commands.png",
+    "assets/payment-flow.png",
+    "assets/admin-dashboard.png"
+  ],
+  "documentation": {
+    "quickStart": "docs/quickstart.md",
+    "platforms": "docs/platforms.md",
+    "commands": "docs/commands.md",
+    "ai": "docs/ai-integration.md",
+    "deployment": "docs/deployment.md"
+  },
+  "license": "MIT", 
+  "author": "Sei Agent Studio",
+  "repository": "https://github.com/sei-agent-studio/templates",
+  "keywords": [
+    "sei",
+    "social",
+    "bot",
+    "ai",
+    "telegram", 
+    "discord",
+    "twitter",
+    "blockchain",
+    "community"
+  ]
+}

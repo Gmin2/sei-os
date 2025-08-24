@@ -1,4 +1,4 @@
-import { SeiAgent, AgentCapability } from '@sei-code/core';
+import { SeiAgent, BaseCapability } from '@sei-code/core';
 import { SeiPrecompileManager } from '@sei-code/precompiles';
 import type { PriceData, TWAPData } from '@sei-code/precompiles';
 
@@ -33,15 +33,32 @@ interface PerformanceReport {
   insights: string[];
 }
 
-export class PerformanceTracker extends AgentCapability {
+export class PerformanceTracker extends BaseCapability {
+  private agent: SeiAgent;
   private precompiles: SeiPrecompileManager;
   private priceHistory: Map<string, Array<{ timestamp: string; price: number }>> = new Map();
   private benchmarks: BenchmarkData[] = [];
 
   constructor(agent: SeiAgent, precompiles: SeiPrecompileManager) {
-    super('performance-tracker', agent);
+    super('performance-tracker', 'Performance tracking and analysis');
+    this.agent = agent;
     this.precompiles = precompiles;
     this.initializeBenchmarks();
+  }
+
+  async execute(params: any): Promise<any> {
+    const { action, ...args } = params;
+    
+    switch (action) {
+      case 'trackAssetPerformance':
+        return this.trackAssetPerformance(args.denom, args.timeframes);
+      case 'compareAssetPerformance':
+        return this.compareAssetPerformance(args.denoms, args.timeframe);
+      case 'generatePerformanceReport':
+        return this.generatePerformanceReport(args.denom);
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
   }
 
   private initializeBenchmarks() {
@@ -193,7 +210,7 @@ export class PerformanceTracker extends AgentCapability {
   private calculateVolatility(priceHistory: Array<{ timestamp: string; price: number }>): number {
     if (priceHistory.length < 2) return 0;
 
-    const returns = [];
+    const returns: number[] = [];
     for (let i = 1; i < priceHistory.length; i++) {
       const returnVal = (priceHistory[i].price - priceHistory[i - 1].price) / priceHistory[i - 1].price;
       returns.push(returnVal);

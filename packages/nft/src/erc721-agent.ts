@@ -1,4 +1,4 @@
-import { SeiAgent, AgentCapability } from '@sei-code/core';
+import { SeiAgent, BaseCapability } from '@sei-code/core';
 import { SeiWallet } from '@sei-code/wallets';
 import { TransactionBuilder } from '@sei-code/transactions';
 import { 
@@ -37,14 +37,18 @@ const ERC721_ABI = [
   'event ApprovalForAll(address indexed owner, address indexed operator, bool approved)'
 ];
 
-export class ERC721Agent extends AgentCapability {
+export class ERC721Agent extends BaseCapability {
+  private agent: SeiAgent;
+  private wallet: SeiWallet;
   private provider: ethers.Provider;
   private pointerContract: ethers.Contract;
   private pointerviewContract: ethers.Contract;
 
   constructor(agent: SeiAgent, wallet: SeiWallet) {
-    super('erc721', agent);
-    
+    super('erc721', 'ERC721 NFT operations and management');
+
+    this.agent = agent;
+    this.wallet = wallet;
     this.provider = wallet.getEthersProvider();
     this.pointerContract = new ethers.Contract(
       POINTER_PRECOMPILE_ADDRESS,
@@ -56,6 +60,27 @@ export class ERC721Agent extends AgentCapability {
       POINTERVIEW_PRECOMPILE_ABI,
       this.provider
     );
+  }
+
+  async execute(params: any): Promise<any> {
+    const { action, ...args } = params;
+
+    switch (action) {
+      case 'getCollection':
+        return this.getCollection(args.contractAddress);
+      case 'getToken':
+        return this.getToken(args.contractAddress, args.tokenId);
+      case 'getOwnerTokens':
+        return this.getOwnerTokens(args.contractAddress, args.owner);
+      case 'transfer':
+        return this.transferToken(args);
+      case 'approve':
+        return this.approveToken(args.contractAddress, args);
+      case 'setApprovalForAll':
+        return this.setApprovalForAll(args.contractAddress, args.operator, args.approved);
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
   }
 
   async createPointer(cw721Address: string, gasFee = '0.01'): Promise<PointerBridgeInfo> {
@@ -149,7 +174,7 @@ export class ERC721Agent extends AgentCapability {
         contract.tokenURI(tokenId).catch(() => null)
       ]);
 
-      let metadata = null;
+      let metadata: any = undefined;
       if (tokenUri) {
         try {
           const response = await fetch(tokenUri);
@@ -210,12 +235,12 @@ export class ERC721Agent extends AgentCapability {
 
   async transferToken(options: NFTTransferOptions): Promise<string> {
     try {
-      const txBuilder = new TransactionBuilder(this.agent.wallet);
+      const txBuilder = new TransactionBuilder(this.wallet);
       
       const contract = new ethers.Contract(
         options.tokenId, 
         ERC721_ABI, 
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
       
       const tx = await contract.transferFrom(options.from, options.to, options.tokenId);
@@ -235,7 +260,7 @@ export class ERC721Agent extends AgentCapability {
       const contract = new ethers.Contract(
         collectionAddress,
         ERC721_ABI,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
       
       const tx = await contract.approve(options.to, options.tokenId);
@@ -255,7 +280,7 @@ export class ERC721Agent extends AgentCapability {
       const contract = new ethers.Contract(
         collectionAddress,
         ERC721_ABI,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
       
       const tx = await contract.setApprovalForAll(operator, approved);
@@ -300,10 +325,10 @@ export class ERC721Agent extends AgentCapability {
       
       const events = await contract.queryFilter(filter, fromBlock);
       
-      return events.map(event => ({
-        from: event.args.from,
-        to: event.args.to,
-        tokenId: event.args.tokenId.toString(),
+      return events.filter(event => 'args' in event).map(event => ({
+        from: (event as any).args.from,
+        to: (event as any).args.to,
+        tokenId: (event as any).args.tokenId.toString(),
         collection: collectionAddress,
         transactionHash: event.transactionHash,
         blockNumber: event.blockNumber,

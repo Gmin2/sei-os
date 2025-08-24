@@ -1,4 +1,4 @@
-import { SeiAgent, AgentCapability } from '@sei-code/core';
+import { SeiAgent, BaseCapability } from '@sei-code/core';
 import { SeiWallet } from '@sei-code/wallets';
 import { PaymentProcessor } from './payment-processor';
 import type {
@@ -11,7 +11,8 @@ import type {
   AgentMonetizationConfig
 } from './types';
 
-export class SubscriptionManager extends AgentCapability {
+export class SubscriptionManager extends BaseCapability {
+  private agent: SeiAgent;
   private paymentProcessor: PaymentProcessor;
   private plans: Map<string, SubscriptionPlan> = new Map();
   private subscriptions: Map<string, Subscription> = new Map();
@@ -23,10 +24,28 @@ export class SubscriptionManager extends AgentCapability {
     paymentProcessor: PaymentProcessor,
     config: AgentMonetizationConfig
   ) {
-    super('subscription-manager', agent);
+    super('subscription-manager', 'Subscription and usage management');
+    this.agent = agent;
     this.paymentProcessor = paymentProcessor;
     this.config = config;
     this.initializePlans();
+  }
+
+  async execute(params: any): Promise<any> {
+    const { action, ...args } = params;
+    
+    switch (action) {
+      case 'createSubscription':
+        return this.createSubscription(args.subscriber, args.planId, args.paymentVerification);
+      case 'cancelSubscription':
+        return this.cancelSubscription(args.subscriptionId);
+      case 'getSubscription':
+        return this.getSubscription(args.subscriptionId);
+      case 'trackUsage':
+        return this.recordUsage(args.subscriptionId, args.usageData);
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
   }
 
   private initializePlans(): void {
@@ -59,7 +78,7 @@ export class SubscriptionManager extends AgentCapability {
       // Check if trial period applies
       const isTrialEligible = plan.trialPeriod && plan.trialPeriod > 0;
       const trialEndsAt = isTrialEligible 
-        ? new Date(now.getTime() + (plan.trialPeriod * 24 * 60 * 60 * 1000)).toISOString()
+        ? new Date(now.getTime() + ((plan.trialPeriod || 0) * 24 * 60 * 60 * 1000)).toISOString()
         : undefined;
 
       const subscription: Subscription = {
@@ -218,7 +237,7 @@ export class SubscriptionManager extends AgentCapability {
   private async checkUsageLimits(subscription: Subscription, plan: SubscriptionPlan): Promise<void> {
     if (!plan.maxUsage) return;
 
-    const exceeded = [];
+    const exceeded: string[] = [];
 
     if (plan.maxUsage.requests && subscription.usage.requests > plan.maxUsage.requests) {
       exceeded.push(`requests (${subscription.usage.requests}/${plan.maxUsage.requests})`);
@@ -363,7 +382,7 @@ export class SubscriptionManager extends AgentCapability {
       // Create payment request
       const paymentRequest = await this.paymentProcessor.createPaymentRequest(
         totalCost.toString(),
-        this.agent.wallet.getAddress(), // Agent receives the payment
+        this.agent.getWalletAddress(), // Agent receives the payment
         {
           currency: this.config.payPerUse.currency,
           description: `Pay-per-use: ${requestCount} requests, ${tokenCount} tokens`,

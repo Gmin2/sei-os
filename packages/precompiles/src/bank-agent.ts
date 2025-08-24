@@ -2,7 +2,7 @@ import { formatEther } from 'viem';
 import { 
   BANK_PRECOMPILE_ABI,
   BANK_PRECOMPILE_ADDRESS,
-  getBankPrecompileEthersContract
+  getBankPrecompileEthersV6Contract
 } from '@sei-js/precompiles';
 import type { PrecompileConfig, TokenBalance } from './types';
 import type { BaseCapability } from '@sei-code/core';
@@ -67,7 +67,7 @@ export class BankAgentCapability implements BaseCapability {
         };
       } else if (this.config.provider) {
         // Use Ethers
-        const bankContract = getBankPrecompileEthersContract(this.config.provider);
+        const bankContract = getBankPrecompileEthersV6Contract(this.config.provider);
         const balance = await bankContract.balance(address, denom);
         const decimals = await bankContract.decimals(denom);
 
@@ -117,7 +117,7 @@ export class BankAgentCapability implements BaseCapability {
 
         return result;
       } else if (this.config.provider) {
-        const bankContract = getBankPrecompileEthersContract(this.config.provider);
+        const bankContract = getBankPrecompileEthersV6Contract(this.config.provider);
         const balances = await bankContract.all_balances(address);
 
         const result: TokenBalance[] = [];
@@ -186,7 +186,7 @@ export class BankAgentCapability implements BaseCapability {
           totalSupply: (totalSupply as bigint).toString()
         };
       } else if (this.config.provider) {
-        const bankContract = getBankPrecompileEthersContract(this.config.provider);
+        const bankContract = getBankPrecompileEthersV6Contract(this.config.provider);
         
         const [name, symbol, decimals, totalSupply] = await Promise.all([
           bankContract.name(denom),
@@ -228,7 +228,9 @@ export class BankAgentCapability implements BaseCapability {
         address: BANK_PRECOMPILE_ADDRESS as `0x${string}`,
         abi: BANK_PRECOMPILE_ABI,
         functionName: 'send',
-        args: [from, to as `0x${string}`, denom, BigInt(amount)]
+        args: [from, to as `0x${string}`, denom, BigInt(amount)],
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;

@@ -2,7 +2,7 @@ import { formatEther, parseEther } from 'viem';
 import { 
   STAKING_PRECOMPILE_ABI,
   STAKING_PRECOMPILE_ADDRESS,
-  getStakingPrecompileEthersContract
+  getStakingPrecompileEthersV6Contract
 } from '@sei-js/precompiles';
 import type { PrecompileConfig, DelegationInfo, ValidatorInfo } from './types';
 import type { BaseCapability } from '@sei-code/core';
@@ -55,7 +55,9 @@ export class StakingAgentCapability implements BaseCapability {
         abi: STAKING_PRECOMPILE_ABI,
         functionName: 'delegate',
         args: [validatorAddress],
-        value: parseEther(amount)
+        value: parseEther(amount),
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;
@@ -77,7 +79,9 @@ export class StakingAgentCapability implements BaseCapability {
         address: STAKING_PRECOMPILE_ADDRESS as `0x${string}`,
         abi: STAKING_PRECOMPILE_ABI,
         functionName: 'undelegate',
-        args: [validatorAddress, parseEther(amount)]
+        args: [validatorAddress, parseEther(amount)],
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;
@@ -99,7 +103,9 @@ export class StakingAgentCapability implements BaseCapability {
         address: STAKING_PRECOMPILE_ADDRESS as `0x${string}`,
         abi: STAKING_PRECOMPILE_ABI,
         functionName: 'redelegate',
-        args: [fromValidator, toValidator, parseEther(amount)]
+        args: [fromValidator, toValidator, parseEther(amount)],
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;
@@ -130,7 +136,7 @@ export class StakingAgentCapability implements BaseCapability {
           rewards: '0' // Would need Distribution precompile for rewards
         };
       } else if (this.config.provider) {
-        const stakingContract = getStakingPrecompileEthersContract(this.config.provider);
+        const stakingContract = getStakingPrecompileEthersV6Contract(this.config.provider);
         const delegation = await stakingContract.delegation(delegatorAddress, validatorAddress);
 
         return {

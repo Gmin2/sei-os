@@ -2,7 +2,7 @@ import { formatEther } from 'viem';
 import { 
   DISTRIBUTION_PRECOMPILE_ABI,
   DISTRIBUTION_PRECOMPILE_ADDRESS,
-  getDistributionPrecompileEthersContract
+  getDistributionPrecompileEthersV6Contract
 } from '@sei-js/precompiles';
 import type { PrecompileConfig, StakingRewards } from './types';
 import type { BaseCapability } from '@sei-code/core';
@@ -71,7 +71,7 @@ export class DistributionAgentCapability implements BaseCapability {
           rewardsByValidator
         };
       } else if (this.config.provider) {
-        const distributionContract = getDistributionPrecompileEthersContract(this.config.provider);
+        const distributionContract = getDistributionPrecompileEthersV6Contract(this.config.provider);
         const rewards = await distributionContract.rewards(delegatorAddress);
 
         const rewardsByValidator: StakingRewards[] = rewards.rewards.map((reward: any) => ({
@@ -109,7 +109,9 @@ export class DistributionAgentCapability implements BaseCapability {
         address: DISTRIBUTION_PRECOMPILE_ADDRESS as `0x${string}`,
         abi: DISTRIBUTION_PRECOMPILE_ABI,
         functionName: 'withdrawDelegationRewards',
-        args: [validatorAddress]
+        args: [validatorAddress],
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;
@@ -131,7 +133,9 @@ export class DistributionAgentCapability implements BaseCapability {
         address: DISTRIBUTION_PRECOMPILE_ADDRESS as `0x${string}`,
         abi: DISTRIBUTION_PRECOMPILE_ABI,
         functionName: 'withdrawMultipleDelegationRewards',
-        args: [validatorAddresses]
+        args: [validatorAddresses],
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;
@@ -153,7 +157,9 @@ export class DistributionAgentCapability implements BaseCapability {
         address: DISTRIBUTION_PRECOMPILE_ADDRESS as `0x${string}`,
         abi: DISTRIBUTION_PRECOMPILE_ABI,
         functionName: 'setWithdrawAddress',
-        args: [withdrawAddress as `0x${string}`]
+        args: [withdrawAddress as `0x${string}`],
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;

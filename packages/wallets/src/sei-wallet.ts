@@ -180,4 +180,21 @@ export class SeiGlobalWallet implements SeiWallet {
         throw new Error(`Unsupported network: ${network}`);
     }
   }
+
+  getEthersProvider(): JsonRpcProvider {
+    return this.provider;
+  }
+
+  getEthersSigner(): Wallet {
+    if (!this.wallet) {
+      throw new Error('Wallet not connected');
+    }
+    return this.wallet;
+  }
+
+  getAddress(): string {
+    return this.address;
+  }
+
+
 }

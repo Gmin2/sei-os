@@ -48,7 +48,7 @@ export function createDeployCommand(): Command {
             console.log(`  Fee Estimate: ${estimate.feeEstimate} ${estimate.currency}`);
             console.log(`  Network: ${network}`);
             
-          } catch (error) {
+          } catch (error: any) {
             spinner.fail(chalk.red(`❌ Cost estimation failed: ${error.message}`));
             process.exit(1);
           }
@@ -112,7 +112,7 @@ export function createDeployCommand(): Command {
             console.log(chalk.cyan('  View on Sei Explorer: https://www.seiscan.app'));
           }
           
-        } catch (error) {
+        } catch (error: any) {
           spinner.fail(chalk.red(`❌ Deployment failed: ${error.message}`));
           
           if (options.verbose) {
@@ -129,7 +129,7 @@ export function createDeployCommand(): Command {
           process.exit(1);
         }
         
-      } catch (error) {
+      } catch (error: any) {
         console.error(chalk.red(`❌ Deployment setup failed: ${error.message}`));
         if (options.verbose) {
           console.error(error.stack);
@@ -176,7 +176,7 @@ async function loadProjectInfo(projectPath: string, packageJson: any): Promise<P
 async function saveDeploymentInfo(projectPath: string, deployment: any): Promise<void> {
   const deploymentInfoPath = path.join(projectPath, '.sei-deployments.json');
   
-  let deploymentData = { deployments: [] };
+  let deploymentData: { deployments: any[] } = { deployments: [] };
   if (await fs.pathExists(deploymentInfoPath)) {
     deploymentData = await fs.readJson(deploymentInfoPath);
   }

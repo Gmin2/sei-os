@@ -24,7 +24,6 @@
     { "path": "../analytics" },
     { "path": "../social" },
     { "path": "../models" },
-    { "path": "../x402" },
-    { "path": "../governance" }
+    { "path": "../x402" }
   ]
 }

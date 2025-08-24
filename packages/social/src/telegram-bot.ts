@@ -1,10 +1,10 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { BaseSocialPlatform } from './social-platform';
-import type { TelegramConfig, SocialMessage, SocialCommand } from './types';
+import type { TelegramConfig, SocialMessage, SocialCommand, SocialPlatformConfig } from './types';
 
 export class TelegramBotPlatform extends BaseSocialPlatform {
   private bot: TelegramBot;
-  private config: TelegramConfig;
+  protected config: TelegramConfig & SocialPlatformConfig;
 
   constructor(config: TelegramConfig) {
     super('telegram', {
@@ -14,7 +14,11 @@ export class TelegramBotPlatform extends BaseSocialPlatform {
       commands: []
     });
     
-    this.config = config;
+    this.config = {
+      ...config,
+      platform: 'telegram' as const,
+      credentials: { token: config.token }
+    };
     this.bot = new TelegramBot(config.token, { polling: false });
     
     // Register Telegram-specific commands

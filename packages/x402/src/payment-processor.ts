@@ -1,4 +1,4 @@
-import { SeiAgent, AgentCapability } from '@sei-code/core';
+import { SeiAgent, BaseCapability } from '@sei-code/core';
 import { SeiWallet } from '@sei-code/wallets';
 import { TransactionBuilder } from '@sei-code/transactions';
 import { ethers } from 'ethers';
@@ -16,17 +16,35 @@ import type {
   PaymentAccept
 } from './types';
 
-export class PaymentProcessor extends AgentCapability {
+export class PaymentProcessor extends BaseCapability {
+  private agent: SeiAgent;
   private config: PaymentProcessorConfig;
   private wallet: SeiWallet;
   private txBuilder: TransactionBuilder;
   private paymentHistory: Map<string, PaymentVerification> = new Map();
 
   constructor(agent: SeiAgent, wallet: SeiWallet, config: PaymentProcessorConfig) {
-    super('payment-processor', agent);
+    super('payment-processor', 'X402 payment processing and micropayments');
+    this.agent = agent;
     this.config = config;
     this.wallet = wallet;
     this.txBuilder = new TransactionBuilder(wallet);
+  }
+
+  async execute(params: any): Promise<any> {
+    const { action, ...args } = params;
+    
+    switch (action) {
+      case 'createPaymentRequest':
+        return this.createPaymentRequest(args.amount, args.recipient, args.description);
+      case 'processPayment':
+        return this.processPayment(args.to, args.amount, args.currency);
+      case 'verifyPayment':
+        return this.verifyPayment(args.paymentHeader, args.expectedAmount, args.expectedRecipient);
+      // Note: refundPayment not yet implemented
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
   }
 
   async createPaymentRequest(
@@ -77,7 +95,7 @@ export class PaymentProcessor extends AgentCapability {
         accepts
       };
     } catch (error) {
-      this.agent.emit('error', `Failed to generate X402 response: ${error.message}`);
+      this.agent.emit('error', `Failed to generate X402 response: ${(error as Error).message}`);
       throw error;
     }
   }
@@ -93,7 +111,7 @@ export class PaymentProcessor extends AgentCapability {
       } else {
         return await this.verifyDirectly(paymentHeader, expectedAmount, expectedRecipient);
       }
-    } catch (error) {
+    } catch (error: any) {
       this.agent.emit('error', `Payment verification failed: ${error.message}`);
       return null;
     }
@@ -134,7 +152,7 @@ export class PaymentProcessor extends AgentCapability {
       }
 
       return null;
-    } catch (error) {
+    } catch (error: any) {
       this.agent.emit('error', `Facilitator verification failed: ${error.message}`);
       return null;
     }
@@ -272,7 +290,11 @@ export class PaymentProcessor extends AgentCapability {
 
       if (currency === 'SEI') {
         // Send native SEI
-        const tx = await this.txBuilder.sendNativeTokens(to, amount);
+        const tx = await this.txBuilder.sendTransaction({
+          to,
+          value: amount,
+          data: '0x'
+        });
         transactionHash = tx.hash;
       } else {
         // Send ERC20 token (simplified - would need token contract address)
@@ -292,7 +314,7 @@ export class PaymentProcessor extends AgentCapability {
         transactionHash,
         verified: true,
         amount,
-        payer: this.wallet.getAddress(),
+        payer: this.wallet.address,
         recipient: to,
         timestamp: new Date().toISOString(),
         blockNumber: receipt.blockNumber

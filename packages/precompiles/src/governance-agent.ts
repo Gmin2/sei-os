@@ -2,9 +2,10 @@ import { parseEther } from 'viem';
 import { 
   GOVERNANCE_PRECOMPILE_ABI,
   GOVERNANCE_PRECOMPILE_ADDRESS,
-  getGovernancePrecompileEthersContract
+  getGovernancePrecompileEthersV6Contract
 } from '@sei-js/precompiles';
-import type { PrecompileConfig, ProposalInfo, VoteInfo, VoteOption } from './types';
+import type { PrecompileConfig, ProposalInfo, VoteInfo } from './types';
+import { VoteOption } from './types';
 import type { BaseCapability } from '@sei-code/core';
 
 export class GovernanceAgentCapability implements BaseCapability {
@@ -55,7 +56,9 @@ export class GovernanceAgentCapability implements BaseCapability {
         address: GOVERNANCE_PRECOMPILE_ADDRESS as `0x${string}`,
         abi: GOVERNANCE_PRECOMPILE_ABI,
         functionName: 'vote',
-        args: [BigInt(proposalId), voteOption]
+        args: [BigInt(proposalId), voteOption],
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;
@@ -78,7 +81,9 @@ export class GovernanceAgentCapability implements BaseCapability {
         abi: GOVERNANCE_PRECOMPILE_ABI,
         functionName: 'deposit',
         args: [BigInt(proposalId)],
-        value: parseEther(amount)
+        value: parseEther(amount),
+        chain: null,
+        account: this.config.walletClient.account!
       });
 
       return hash;

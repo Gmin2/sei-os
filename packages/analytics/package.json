@@ -22,8 +22,7 @@
   "dependencies": {
     "@sei-code/core": "workspace:*",
     "@sei-code/precompiles": "workspace:*",
-    "@sei-js/precompiles": "^0.1.0",
-    "@sei-js/registry": "^0.1.0",
+    "@sei-js/precompiles": "^2.1.2",
     "ethers": "^6.0.0",
     "viem": "^2.0.0"
   },

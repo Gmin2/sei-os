@@ -1,0 +1,353 @@
+{
+  "name": "nft-trader",
+  "displayName": "NFT Trading Agent",
+  "description": "AI-powered NFT trading bot with market analysis, automated trading, and portfolio management for Sei NFT marketplaces",
+  "version": "1.0.0",
+  "category": "nft",
+  "packages": [
+    "@sei-code/core",
+    "@sei-code/nft",
+    "@sei-code/wallets",
+    "@sei-code/precompiles",
+    "@sei-code/transactions",
+    "@sei-code/analytics",
+    "@sei-code/social",
+    "@sei-code/models",
+    "@sei-code/x402"
+  ],
+  "features": [
+    "automated NFT trading",
+    "AI-powered market analysis",
+    "price prediction and trends",
+    "portfolio tracking",
+    "rarity analysis",
+    "marketplace monitoring",
+    "telegram bot integration",
+    "profit optimization"
+  ],
+  "integrations": [
+    "telegram",
+    "pallet-marketplace",
+    "dagora-marketplace", 
+    "yieldmos-marketplace",
+    "gemini",
+    "claude",
+    "openai",
+    "x402-payments"
+  ],
+  "variables": {
+    "projectName": {
+      "type": "string",
+      "description": "Name of your NFT trading project",
+      "default": "Sei NFT Trader",
+      "required": true
+    },
+    "network": {
+      "type": "enum",
+      "description": "Sei network to connect to",
+      "options": ["testnet", "mainnet"],
+      "default": "testnet",
+      "required": true
+    },
+    "walletType": {
+      "type": "enum",
+      "description": "Wallet integration type",
+      "options": ["metamask", "sei-global"],
+      "default": "metamask",
+      "required": true
+    },
+    "aiProvider": {
+      "type": "enum",
+      "description": "AI model provider for analysis",
+      "options": ["gemini", "claude", "openai"],
+      "default": "gemini",
+      "required": true
+    },
+    "autoTrading": {
+      "type": "boolean",
+      "description": "Enable automated trading based on AI analysis",
+      "default": false,
+      "required": true
+    },
+    "maxInvestmentPerNFT": {
+      "type": "number",
+      "description": "Maximum investment per NFT in SEI",
+      "default": 500,
+      "min": 1,
+      "max": 10000,
+      "required": true
+    },
+    "profitTargetPercentage": {
+      "type": "number",
+      "description": "Target profit percentage for sales",
+      "default": 50,
+      "min": 10,
+      "max": 500,
+      "required": true
+    },
+    "maxHoldingPeriod": {
+      "type": "number",
+      "description": "Maximum holding period in days",
+      "default": 30,
+      "min": 1,
+      "max": 365,
+      "required": false
+    },
+    "riskTolerance": {
+      "type": "enum",
+      "description": "Risk tolerance for trading decisions",
+      "options": ["low", "medium", "high"],
+      "default": "medium",
+      "required": true
+    },
+    "focusCollections": {
+      "type": "string",
+      "description": "Comma-separated list of collection names to focus on",
+      "default": "sei-apes,sei-bears",
+      "required": false
+    },
+    "monitoredMarketplaces": {
+      "type": "multiselect",
+      "description": "NFT marketplaces to monitor",
+      "options": ["pallet", "dagora", "yieldmos"],
+      "default": ["pallet", "dagora"],
+      "required": true
+    },
+    "dealThreshold": {
+      "type": "number",
+      "description": "Deal threshold as percentage of floor price",
+      "default": 0.8,
+      "min": 0.1,
+      "max": 1.0,
+      "required": false
+    },
+    "rarityWeighting": {
+      "type": "boolean",
+      "description": "Enable rarity-based pricing analysis",
+      "default": true,
+      "required": false
+    }
+  },
+  "environmentVariables": [
+    {
+      "name": "PRIVATE_KEY",
+      "description": "Your wallet private key",
+      "required": true,
+      "secret": true
+    },
+    {
+      "name": "TELEGRAM_BOT_TOKEN",
+      "description": "Telegram bot token from @BotFather",
+      "required": true,
+      "secret": true
+    },
+    {
+      "name": "TELEGRAM_CHAT_ID",
+      "description": "Your Telegram chat ID for notifications",
+      "required": true,
+      "secret": false
+    },
+    {
+      "name": "GEMINI_API_KEY",
+      "description": "Google Gemini API key",
+      "required": "{{ aiProvider === 'gemini' }}",
+      "secret": true
+    },
+    {
+      "name": "CLAUDE_API_KEY",
+      "description": "Anthropic Claude API key",
+      "required": "{{ aiProvider === 'claude' }}",
+      "secret": true
+    },
+    {
+      "name": "OPENAI_API_KEY",
+      "description": "OpenAI API key",
+      "required": "{{ aiProvider === 'openai' }}",
+      "secret": true
+    },
+    {
+      "name": "AUTO_TRADING_ENABLED",
+      "description": "Enable automated trading",
+      "required": false,
+      "default": "{{ autoTrading ? 'true' : 'false' }}"
+    },
+    {
+      "name": "MAX_INVESTMENT_PER_NFT", 
+      "description": "Maximum investment per NFT",
+      "required": false,
+      "default": "{{ maxInvestmentPerNFT }}"
+    },
+    {
+      "name": "PROFIT_TARGET_PERCENTAGE",
+      "description": "Target profit percentage",
+      "required": false,
+      "default": "{{ profitTargetPercentage }}"
+    },
+    {
+      "name": "MAX_HOLDING_PERIOD",
+      "description": "Maximum holding period in milliseconds",
+      "required": false,
+      "default": "{{ maxHoldingPeriod * 24 * 60 * 60 * 1000 }}"
+    },
+    {
+      "name": "RISK_TOLERANCE",
+      "description": "Risk tolerance level",
+      "required": false,
+      "default": "{{ riskTolerance }}"
+    },
+    {
+      "name": "FOCUS_COLLECTIONS",
+      "description": "Collections to focus trading on",
+      "required": false,
+      "default": "{{ focusCollections }}"
+    },
+    {
+      "name": "DEAL_THRESHOLD",
+      "description": "Deal detection threshold",
+      "required": false,
+      "default": "{{ dealThreshold }}"
+    },
+    {
+      "name": "HIGH_VALUE_THRESHOLD",
+      "description": "High value NFT threshold in SEI",
+      "required": false,
+      "default": "1000"
+    },
+    {
+      "name": "MEDIUM_VALUE_THRESHOLD",
+      "description": "Medium value NFT threshold in SEI",
+      "required": false,
+      "default": "100"
+    },
+    {
+      "name": "SEI_RPC_URL",
+      "description": "Sei RPC endpoint URL",
+      "required": false,
+      "default": "{{ network === 'testnet' ? 'https://evm-rpc-testnet.sei-apis.com' : 'https://evm-rpc.sei-apis.com' }}"
+    }
+  ],
+  "files": [
+    {
+      "path": "package.json",
+      "template": "package.json.hbs",
+      "description": "Project configuration and dependencies"
+    },
+    {
+      "path": "tsconfig.json",
+      "template": "tsconfig.json.hbs",
+      "description": "TypeScript configuration"
+    },
+    {
+      "path": ".env.example",
+      "template": ".env.example.hbs",
+      "description": "Environment variables template"
+    },
+    {
+      "path": "src/index.ts",
+      "template": "src/index.ts.hbs",
+      "description": "Application entry point"
+    },
+    {
+      "path": "src/agents/nft-agent.ts",
+      "template": "src/agents/nft-agent.ts.hbs",
+      "description": "Main NFT trading agent"
+    },
+    {
+      "path": "src/services/marketplace-monitor.ts",
+      "template": "src/services/marketplace-monitor.ts.hbs",
+      "description": "NFT marketplace monitoring service"
+    },
+    {
+      "path": "src/services/price-analyzer.ts",
+      "template": "src/services/price-analyzer.ts.hbs",
+      "description": "NFT price analysis and prediction"
+    },
+    {
+      "path": "src/services/trading-strategy.ts",
+      "template": "src/services/trading-strategy.ts.hbs",
+      "description": "Trading strategy and execution"
+    },
+    {
+      "path": "src/services/notification-service.ts",
+      "template": "src/services/notification-service.ts.hbs",
+      "description": "Trading alerts and notifications"
+    },
+    {
+      "path": "src/services/rarity-analyzer.ts",
+      "template": "src/services/rarity-analyzer.ts.hbs",
+      "description": "NFT rarity and trait analysis",
+      "condition": "{{ rarityWeighting }}"
+    },
+    {
+      "path": "scripts/deploy.ts",
+      "template": "scripts/deploy.ts.hbs",
+      "description": "Deployment automation script"
+    },
+    {
+      "path": "README.md",
+      "template": "README.md.hbs",
+      "description": "Project documentation"
+    }
+  ],
+  "commands": {
+    "install": "pnpm install",
+    "build": "pnpm build",
+    "dev": "pnpm dev",
+    "start": "pnpm start",
+    "deploy": "pnpm run deploy"
+  },
+  "postInstall": [
+    "echo '✅ NFT trader template installed successfully!'",
+    "echo '📝 Next steps:'",
+    "echo '  1. Copy .env.example to .env and configure your settings'",
+    "echo '  2. Set your trading parameters and risk tolerance'",
+    "echo '  3. Run: pnpm dev to start development'",
+    "echo '  4. Use Telegram commands to monitor and trade NFTs'",
+    "echo '🎨 Your AI NFT trading bot is ready!'",
+    "echo '⚠️  WARNING: Start with small amounts on testnet!'"
+  ],
+  "warnings": [
+    "NFT trading involves significant financial risk",
+    "Always test thoroughly on testnet before using mainnet",
+    "Set appropriate investment limits and stop losses",
+    "Market conditions can change rapidly",
+    "Rarity and price analysis may not guarantee profits"
+  ],
+  "tags": [
+    "nft",
+    "trading",
+    "marketplace",
+    "ai",
+    "analytics",
+    "rarity",
+    "telegram",
+    "sei"
+  ],
+  "screenshots": [
+    "assets/nft-dashboard.png",
+    "assets/trading-opportunities.png",
+    "assets/collection-analytics.png",
+    "assets/telegram-commands.png"
+  ],
+  "documentation": {
+    "quickStart": "docs/quickstart.md",
+    "trading": "docs/trading-strategies.md",
+    "marketplaces": "docs/marketplace-integration.md",
+    "analysis": "docs/price-analysis.md",
+    "api": "docs/api.md",
+    "deployment": "docs/deployment.md"
+  },
+  "license": "MIT",
+  "author": "Sei Agent Studio",
+  "repository": "https://github.com/sei-agent-studio/templates",
+  "keywords": [
+    "sei",
+    "nft",
+    "trading",
+    "marketplace",
+    "ai",
+    "rarity",
+    "blockchain",
+    "telegram"
+  ]
+}

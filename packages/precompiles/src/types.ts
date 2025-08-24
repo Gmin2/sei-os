@@ -74,3 +74,15 @@ export interface TWAPData {
   lookbackSeconds: number;
   timestamp: Date;
 }
+
+export interface YieldRecommendation {
+  action: string;
+  reason: string;
+  expectedReturn: string;
+  risk: 'low' | 'medium' | 'high';
+}
+
+export interface RiskWarning {
+  risk: string;
+  recommendation: string;
+}

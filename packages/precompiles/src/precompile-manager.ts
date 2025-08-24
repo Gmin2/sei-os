@@ -1,6 +1,6 @@
 import type { Provider } from 'ethers';
 import type { PublicClient, WalletClient } from 'viem';
-import type { PrecompileConfig } from './types';
+import type { PrecompileConfig, YieldRecommendation, RiskWarning } from './types';
 import { BankAgentCapability } from './bank-agent';
 import { StakingAgentCapability } from './staking-agent';
 import { OracleAgentCapability } from './oracle-agent';
@@ -72,7 +72,7 @@ export class SeiPrecompileManager {
     action: string;
     params: any;
   }>): Promise<any[]> {
-    const results = [];
+    const results: any[] = [];
     
     for (const op of operations) {
       let result;
@@ -183,7 +183,7 @@ export class SeiPrecompileManager {
         this.staking.execute({ action: 'get_validators' })
       ]);
 
-      const recommendations = [];
+      const recommendations: YieldRecommendation[] = [];
       let currentYield = '0';
       let optimizedYield = '0';
 
@@ -263,8 +263,8 @@ export class SeiPrecompileManager {
       const seiBalance = balances.find((b: any) => b.denom === 'usei');
       
       let riskScore = 0;
-      const riskFactors = [];
-      const recommendations = [];
+      const riskFactors: string[] = [];
+      const recommendations: string[] = [];
 
       // Liquidity risk
       const totalBalance = seiBalance ? parseFloat(seiBalance.formatted) : 0;

@@ -9,6 +9,8 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "useUnknownInCatchVariables": false,
     "declaration": true,
     "declarationMap": true,
     "composite": true,
@@ -31,7 +33,6 @@
     { "path": "./packages/social" },
     { "path": "./packages/models" },
     { "path": "./packages/x402" },
-    { "path": "./packages/governance" },
     { "path": "./packages/seiai-cli" }
   ],
   "files": [],

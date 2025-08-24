@@ -1,0 +1,323 @@
+{
+  "name": "defi-app",
+  "displayName": "DeFi Portfolio Manager", 
+  "description": "AI-powered DeFi portfolio management with automated trading, yield optimization, and risk management",
+  "version": "1.0.0",
+  "category": "defi",
+  "packages": [
+    "@sei-code/core",
+    "@sei-code/wallets",
+    "@sei-code/precompiles", 
+    "@sei-code/transactions",
+    "@sei-code/analytics",
+    "@sei-code/social",
+    "@sei-code/models",
+    "@sei-code/x402"
+  ],
+  "features": [
+    "automated portfolio management",
+    "AI-powered trading decisions",
+    "yield optimization",
+    "risk management", 
+    "real-time analytics",
+    "telegram bot integration",
+    "automated rebalancing",
+    "arbitrage detection"
+  ],
+  "integrations": [
+    "telegram",
+    "gemini",
+    "claude",
+    "openai",
+    "x402-payments"
+  ],
+  "variables": {
+    "projectName": {
+      "type": "string",
+      "description": "Name of your DeFi project",
+      "default": "Sei DeFi Manager",
+      "required": true
+    },
+    "network": {
+      "type": "enum",
+      "description": "Sei network to connect to",
+      "options": ["testnet", "mainnet"], 
+      "default": "testnet",
+      "required": true
+    },
+    "walletType": {
+      "type": "enum",
+      "description": "Wallet integration type",
+      "options": ["metamask", "sei-global"],
+      "default": "metamask", 
+      "required": true
+    },
+    "aiProvider": {
+      "type": "enum",
+      "description": "AI model provider for trading decisions",
+      "options": ["gemini", "claude", "openai"],
+      "default": "gemini",
+      "required": true
+    },
+    "autoTrading": {
+      "type": "boolean",
+      "description": "Enable automated trading based on AI analysis",
+      "default": false,
+      "required": true
+    },
+    "maxPositionSize": {
+      "type": "number",
+      "description": "Maximum position size as percentage of portfolio",
+      "default": 0.1,
+      "min": 0.01,
+      "max": 0.5,
+      "required": true
+    },
+    "stopLossPercentage": {
+      "type": "number", 
+      "description": "Stop loss trigger percentage",
+      "default": 5,
+      "min": 1,
+      "max": 20,
+      "required": true
+    },
+    "takeProfitPercentage": {
+      "type": "number",
+      "description": "Take profit trigger percentage", 
+      "default": 20,
+      "min": 5,
+      "max": 100,
+      "required": true
+    },
+    "rebalanceThreshold": {
+      "type": "number",
+      "description": "Portfolio rebalancing threshold percentage",
+      "default": 5,
+      "min": 1,
+      "max": 20,
+      "required": false
+    },
+    "yieldFarming": {
+      "type": "boolean",
+      "description": "Enable yield farming optimization",
+      "default": true,
+      "required": false
+    },
+    "arbitrageEnabled": {
+      "type": "boolean",
+      "description": "Enable arbitrage opportunity detection",
+      "default": true,
+      "required": false
+    },
+    "riskTolerance": {
+      "type": "enum",
+      "description": "Risk tolerance level",
+      "options": ["low", "medium", "high"],
+      "default": "medium",
+      "required": true
+    }
+  },
+  "environmentVariables": [
+    {
+      "name": "PRIVATE_KEY",
+      "description": "Your wallet private key",
+      "required": true,
+      "secret": true
+    },
+    {
+      "name": "TELEGRAM_BOT_TOKEN",
+      "description": "Telegram bot token from @BotFather", 
+      "required": true,
+      "secret": true
+    },
+    {
+      "name": "TELEGRAM_CHAT_ID",
+      "description": "Your Telegram chat ID for notifications",
+      "required": true,
+      "secret": false
+    },
+    {
+      "name": "GEMINI_API_KEY",
+      "description": "Google Gemini API key",
+      "required": "{{ aiProvider === 'gemini' }}",
+      "secret": true
+    },
+    {
+      "name": "CLAUDE_API_KEY", 
+      "description": "Anthropic Claude API key",
+      "required": "{{ aiProvider === 'claude' }}",
+      "secret": true
+    },
+    {
+      "name": "OPENAI_API_KEY",
+      "description": "OpenAI API key",
+      "required": "{{ aiProvider === 'openai' }}",
+      "secret": true
+    },
+    {
+      "name": "AUTO_TRADING_ENABLED",
+      "description": "Enable automated trading",
+      "required": false,
+      "default": "{{ autoTrading ? 'true' : 'false' }}"
+    },
+    {
+      "name": "MAX_POSITION_SIZE",
+      "description": "Maximum position size as decimal",
+      "required": false,
+      "default": "{{ maxPositionSize }}"
+    },
+    {
+      "name": "STOP_LOSS_PERCENTAGE",
+      "description": "Stop loss percentage",
+      "required": false,
+      "default": "{{ stopLossPercentage }}"
+    },
+    {
+      "name": "TAKE_PROFIT_PERCENTAGE", 
+      "description": "Take profit percentage",
+      "required": false,
+      "default": "{{ takeProfitPercentage }}"
+    },
+    {
+      "name": "YIELD_FARMING_ENABLED",
+      "description": "Enable yield farming",
+      "required": false,
+      "default": "{{ yieldFarming ? 'true' : 'false' }}"
+    },
+    {
+      "name": "ARBITRAGE_ENABLED",
+      "description": "Enable arbitrage detection",
+      "required": false,
+      "default": "{{ arbitrageEnabled ? 'true' : 'false' }}"
+    },
+    {
+      "name": "RISK_TOLERANCE",
+      "description": "Risk tolerance level",
+      "required": false,
+      "default": "{{ riskTolerance }}"
+    },
+    {
+      "name": "SEI_RPC_URL",
+      "description": "Sei RPC endpoint URL",
+      "required": false,
+      "default": "{{ network === 'testnet' ? 'https://evm-rpc-testnet.sei-apis.com' : 'https://evm-rpc.sei-apis.com' }}"
+    }
+  ],
+  "files": [
+    {
+      "path": "package.json",
+      "template": "package.json.hbs",
+      "description": "Project configuration and dependencies"
+    },
+    {
+      "path": "tsconfig.json",
+      "template": "tsconfig.json.hbs", 
+      "description": "TypeScript configuration"
+    },
+    {
+      "path": ".env.example",
+      "template": ".env.example.hbs",
+      "description": "Environment variables template"
+    },
+    {
+      "path": "src/index.ts",
+      "template": "src/index.ts.hbs",
+      "description": "Application entry point"
+    },
+    {
+      "path": "src/agents/defi-agent.ts",
+      "template": "src/agents/defi-agent.ts.hbs", 
+      "description": "Main DeFi agent implementation"
+    },
+    {
+      "path": "src/services/portfolio-manager.ts",
+      "template": "src/services/portfolio-manager.ts.hbs",
+      "description": "Portfolio tracking and management"
+    },
+    {
+      "path": "src/services/trading-engine.ts",
+      "template": "src/services/trading-engine.ts.hbs",
+      "description": "Trading execution and automation"
+    },
+    {
+      "path": "src/services/risk-manager.ts",
+      "template": "src/services/risk-manager.ts.hbs",
+      "description": "Risk assessment and management"
+    },
+    {
+      "path": "src/services/notification-service.ts",
+      "template": "src/services/notification-service.ts.hbs",
+      "description": "Alerts and notifications"
+    },
+    {
+      "path": "scripts/deploy.ts",
+      "template": "scripts/deploy.ts.hbs",
+      "description": "Deployment automation script"
+    },
+    {
+      "path": "README.md", 
+      "template": "README.md.hbs",
+      "description": "Project documentation"
+    }
+  ],
+  "commands": {
+    "install": "pnpm install",
+    "build": "pnpm build",
+    "dev": "pnpm dev", 
+    "start": "pnpm start",
+    "deploy": "pnpm run deploy"
+  },
+  "postInstall": [
+    "echo '✅ DeFi app template installed successfully!'",
+    "echo '📝 Next steps:'",
+    "echo '  1. Copy .env.example to .env and configure your settings'",
+    "echo '  2. Set your risk parameters and trading preferences'", 
+    "echo '  3. Run: pnpm dev to start development'",
+    "echo '  4. Use Telegram commands to manage your portfolio'",
+    "echo '⚠️  WARNING: Start with small amounts on testnet!'"
+  ],
+  "warnings": [
+    "This template enables automated trading with real funds",
+    "Always test thoroughly on testnet before using mainnet",
+    "Set appropriate risk limits and stop losses",
+    "Monitor your positions regularly",
+    "DeFi trading involves significant financial risk"
+  ],
+  "tags": [
+    "defi",
+    "trading",
+    "portfolio",
+    "yield-farming", 
+    "arbitrage",
+    "risk-management",
+    "ai",
+    "telegram",
+    "sei"
+  ],
+  "screenshots": [
+    "assets/portfolio-dashboard.png",
+    "assets/trading-commands.png",
+    "assets/risk-analytics.png",
+    "assets/yield-opportunities.png"
+  ],
+  "documentation": {
+    "quickStart": "docs/quickstart.md",
+    "trading": "docs/trading.md",
+    "risk": "docs/risk-management.md", 
+    "api": "docs/api.md",
+    "deployment": "docs/deployment.md"
+  },
+  "license": "MIT",
+  "author": "Sei Agent Studio",
+  "repository": "https://github.com/sei-agent-studio/templates",
+  "keywords": [
+    "sei",
+    "defi",
+    "trading",
+    "portfolio",
+    "yield",
+    "blockchain",
+    "ai",
+    "telegram"
+  ]
+}

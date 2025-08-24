@@ -131,6 +131,26 @@ export class MetaMaskWallet implements SeiWallet {
   }
 
   /**
+   * Get Ethers provider
+   */
+  getEthersProvider(): any {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+    return this.provider;
+  }
+
+  /**
+   * Get Ethers signer
+   */
+  getEthersSigner(): any {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+    return this.provider.getSigner();
+  }
+
+  /**
    * Disconnect the wallet
    */
   async disconnect(): Promise<void> {

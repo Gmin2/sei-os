@@ -1,7 +1,5 @@
 // Re-export all @sei-js/precompiles functionality
 export * from '@sei-js/precompiles';
-export * from '@sei-js/precompiles/viem';
-export * from '@sei-js/precompiles/ethers';
 
 // Agent-specific wrappers and utilities
 export * from './bank-agent';

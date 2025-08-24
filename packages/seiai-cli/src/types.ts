@@ -111,4 +111,6 @@ export interface CLIOptions {
   dryRun?: boolean;
   verbose?: boolean;
   config?: string;
+  project?: string;
+  estimate?: boolean;
 }

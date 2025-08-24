@@ -27,6 +27,13 @@ export class SeiAgent extends EventEmitter {
   }
 
   /**
+   * Get the wallet address
+   */
+  getWalletAddress(): string {
+    return this.wallet?.address || '';
+  }
+
+  /**
    * Add a capability to the agent
    */
   addCapability(capability: AgentCapability): void {

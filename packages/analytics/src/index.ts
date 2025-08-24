@@ -6,6 +6,9 @@ export { MarketDataAgent } from './market-data';
 // Export all types
 export * from './types';
 
+// Import types for use in this file
+import type { PortfolioSnapshot, PerformanceReport, PerformanceMetrics } from './types';
+
 // Re-export commonly used precompile types for convenience
 export type { 
   TokenBalance, 
@@ -57,7 +60,14 @@ export class AnalyticsAgent {
   /**
    * Get comprehensive analytics dashboard for a user
    */
-  async getDashboard(userAddress: string) {
+  async getDashboard(userAddress: string): Promise<{
+    portfolioSnapshot: PortfolioSnapshot;
+    performanceReports: PerformanceReport[];
+    marketTrends: any;
+    allocation: any;
+    performanceHistory: any;
+    recommendations: any[];
+  }> {
     try {
       const [portfolioSnapshot, performanceReports, marketTrends] = await Promise.all([
         this.portfolio.analyzePortfolio(userAddress),
@@ -69,22 +79,12 @@ export class AnalyticsAgent {
       const performanceHistory = await this.portfolio.trackPerformanceOverTime(userAddress);
 
       return {
-        portfolio: portfolioSnapshot,
+        portfolioSnapshot,
+        performanceReports: performanceReports as unknown as PerformanceReport[],
+        marketTrends,
         allocation,
-        performance: {
-          reports: performanceReports,
-          history: performanceHistory
-        },
-        market: {
-          trends: marketTrends,
-          signals: await this.market.generateTradingSignals('usei')
-        },
-        summary: {
-          totalValue: portfolioSnapshot.totalValue,
-          dailyChange: portfolioSnapshot.performance.dailyReturnPercentage,
-          diversificationScore: portfolioSnapshot.performance.diversificationScore,
-          riskLevel: this.assessRiskLevel(portfolioSnapshot)
-        }
+        performanceHistory,
+        recommendations: []
       };
     } catch (error) {
       throw new Error(`Failed to generate dashboard: ${error.message}`);
@@ -94,14 +94,25 @@ export class AnalyticsAgent {
   /**
    * Compare multiple portfolios
    */
-  async comparePortfolios(addresses: string[]) {
+  async comparePortfolios(addresses: string[]): Promise<{
+    portfolios: Array<{
+      address: string;
+      snapshot: PortfolioSnapshot;
+    }>;
+    comparison: any;
+  }> {
     return this.portfolio.comparePortfolios(addresses);
   }
 
   /**
    * Get market overview for multiple assets
    */
-  async getMarketOverview(denoms: string[] = ['usei', 'uatom', 'uosmo']) {
+  async getMarketOverview(denoms: string[] = ['usei', 'uatom', 'uosmo']): Promise<{
+    correlations: any;
+    trends: any;
+    performance: any;
+    summary: any;
+  }> {
     try {
       const [correlations, trends, performance] = await Promise.all([
         this.market.calculateCorrelationMatrix(denoms),
@@ -137,7 +148,7 @@ export class AnalyticsAgent {
         this.market.getMarketTrend('usei', ['7d', '30d'])
       ]);
 
-      const recommendations = [];
+      const recommendations: any[] = [];
 
       // Diversification recommendations
       if (portfolioData.performance.diversificationScore < 30) {

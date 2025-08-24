@@ -1,11 +1,8 @@
-// Core components
 export { PaymentProcessor } from './payment-processor';
 export { SubscriptionManager } from './subscription-manager';
 
-// Export all types
 export * from './types';
 
-// Re-export useful x402 utilities
 export type { Resource, Network, Price } from '@sei-js/x402';
 
 import { SeiAgent } from '@sei-code/core';
@@ -115,7 +112,7 @@ export class X402Agent {
         if (!paymentHeader) {
           const paymentRequest = await this.payment.createPaymentRequest(
             service.pricing.amount!,
-            this.agent.wallet.getAddress(),
+            this.agent.getWalletAddress(),
             {
               currency: service.pricing.currency || 'SEI',
               description: `Access to ${service.name}`,
@@ -138,7 +135,7 @@ export class X402Agent {
         const verification = await this.payment.verifyPayment(
           paymentHeader,
           service.pricing.amount!,
-          this.agent.wallet.getAddress()
+          this.agent.getWalletAddress()
         );
 
         if (!verification) {

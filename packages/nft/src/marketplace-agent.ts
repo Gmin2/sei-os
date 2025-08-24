@@ -1,4 +1,4 @@
-import { SeiAgent, AgentCapability } from '@sei-code/core';
+import { SeiAgent, BaseCapability } from '@sei-code/core';
 import { SeiWallet } from '@sei-code/wallets';
 import { TransactionBuilder } from '@sei-code/transactions';
 import { ethers } from 'ethers';
@@ -32,14 +32,37 @@ const GENERIC_MARKETPLACE_ABI = [
   'event ListingUpdated(address indexed nftContract, uint256 indexed tokenId, address indexed seller, uint256 newPrice)'
 ];
 
-export class MarketplaceAgent extends AgentCapability {
+export class MarketplaceAgent extends BaseCapability {
   private provider: ethers.Provider;
   private marketplaces: Map<string, MarketplaceConfig> = new Map();
+  private wallet: SeiWallet;
+  private agent: SeiAgent;
 
   constructor(agent: SeiAgent, wallet: SeiWallet) {
-    super('marketplace', agent);
+    super('marketplace', 'NFT marketplace operations and trading');
+    this.agent = agent;
+    this.wallet = wallet;
     this.provider = wallet.getEthersProvider();
     this.initializeDefaultMarketplaces();
+  }
+
+  async execute(params: any): Promise<any> {
+    const { action, ...args } = params;
+    
+    switch (action) {
+      case 'createListing':
+        return this.createListing(args.marketplace, args.nftContract, args.tokenId, args.price, args.paymentToken);
+      case 'buyItem':
+        return this.buyItem(args.marketplace, args.nftContract, args.tokenId);
+      case 'cancelListing':
+        return this.cancelListing(args.marketplace, args.nftContract, args.tokenId);
+      case 'getListings':
+        return this.getCollectionListings(args.marketplace, args.nftContract);
+      case 'getMarketplaceStats':
+        return this.getMarketplaceStats(args.marketplace, args.nftContract);
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
   }
 
   private initializeDefaultMarketplaces() {
@@ -81,7 +104,7 @@ export class MarketplaceAgent extends AgentCapability {
       const contract = new ethers.Contract(
         marketplace.contractAddress,
         marketplace.abi,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
 
       const priceWei = ethers.parseEther(price);
@@ -114,11 +137,11 @@ export class MarketplaceAgent extends AgentCapability {
       const contract = new ethers.Contract(
         marketplace.contractAddress,
         marketplace.abi,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
 
       const listing = await this.getListing(marketplaceName, nftContract, tokenId);
-      if (!listing || !listing.active) {
+      if (!listing || listing.status !== 'active') {
         throw new Error('Item is not listed for sale');
       }
 
@@ -160,7 +183,7 @@ export class MarketplaceAgent extends AgentCapability {
       const contract = new ethers.Contract(
         marketplace.contractAddress,
         marketplace.abi,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
 
       const tx = await contract.cancelListing(nftContract, tokenId);
@@ -192,7 +215,7 @@ export class MarketplaceAgent extends AgentCapability {
       const contract = new ethers.Contract(
         marketplace.contractAddress,
         marketplace.abi,
-        this.agent.wallet.getEthersSigner()
+        this.wallet.getEthersSigner()
       );
 
       const newPriceWei = ethers.parseEther(newPrice);
@@ -229,7 +252,7 @@ export class MarketplaceAgent extends AgentCapability {
 
       const listing = await contract.getListing(nftContract, tokenId);
       
-      if (!listing.active) {
+      if (!(listing as any).active) {
         return null;
       }
 
@@ -268,7 +291,7 @@ export class MarketplaceAgent extends AgentCapability {
       const listings = await contract.getListingsByCollection(nftContract);
       
       return listings
-        .filter((listing: any) => listing.active)
+        .filter((listing: any) => (listing as any).active)
         .map((listing: any) => ({
           tokenId: listing.tokenId.toString(),
           collection: nftContract,

@@ -1,7 +1,7 @@
 import { 
   ORACLE_PRECOMPILE_ABI,
   ORACLE_PRECOMPILE_ADDRESS,
-  getOraclePrecompileEthersContract
+  getOraclePrecompileEthersV6Contract
 } from '@sei-js/precompiles';
 import type { PrecompileConfig, PriceData, TWAPData } from './types';
 import type { BaseCapability } from '@sei-code/core';
@@ -57,10 +57,10 @@ export class OracleAgentCapability implements BaseCapability {
           source: 'sei-oracle'
         }));
       } else if (this.config.provider) {
-        const oracleContract = getOraclePrecompileEthersContract(this.config.provider);
+        const oracleContract = getOraclePrecompileEthersV6Contract(this.config.provider);
         const exchangeRates = await oracleContract.getExchangeRates();
 
-        return exchangeRates.map(rate => ({
+        return exchangeRates.map((rate: any) => ({
           denom: rate.denom,
           price: parseFloat(rate.oracleExchangeRateVal.exchangeRate),
           timestamp: new Date(Number(rate.oracleExchangeRateVal.lastUpdateTimestamp) * 1000),
@@ -113,10 +113,10 @@ export class OracleAgentCapability implements BaseCapability {
           timestamp: new Date()
         };
       } else if (this.config.provider) {
-        const oracleContract = getOraclePrecompileEthersContract(this.config.provider);
+        const oracleContract = getOraclePrecompileEthersV6Contract(this.config.provider);
         const twapData = await oracleContract.getOracleTwaps(BigInt(lookbackSeconds));
 
-        const denomData = twapData.find(t => t.denom === denom);
+        const denomData = twapData.find((t: any) => t.denom === denom);
         if (!denomData) {
           throw new Error(`TWAP data not found for denomination: ${denom}`);
         }

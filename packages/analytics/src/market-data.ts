@@ -1,4 +1,4 @@
-import { SeiAgent, AgentCapability } from '@sei-code/core';
+import { SeiAgent, BaseCapability } from '@sei-code/core';
 import { SeiPrecompileManager } from '@sei-code/precompiles';
 import type { PriceData, TWAPData } from '@sei-code/precompiles';
 import type { 
@@ -10,14 +10,35 @@ import type {
   CorrelationMatrix
 } from './types';
 
-export class MarketDataAgent extends AgentCapability {
+export class MarketDataAgent extends BaseCapability {
+  private agent: SeiAgent;
   private precompiles: SeiPrecompileManager;
   private priceCache: Map<string, MarketDataPoint[]> = new Map();
   private cacheTimeout = 60000; // 1 minute
 
   constructor(agent: SeiAgent, precompiles: SeiPrecompileManager) {
-    super('market-data', agent);
+    super('market-data', 'Market data analysis and insights');
+    this.agent = agent;
     this.precompiles = precompiles;
+  }
+
+  async execute(params: any): Promise<any> {
+    const { action, ...args } = params;
+    
+    switch (action) {
+      case 'getMarketData':
+        return this.getMarketData(args.denom, args.timeframe);
+      case 'calculateTechnicalIndicators':
+        return this.calculateTechnicalIndicators(args.denom, args.period);
+      case 'generateTradingSignals':
+        return this.generateTradingSignals(args.denom);
+      case 'getMarketTrend':
+        return this.getMarketTrend(args.denom, args.lookbackDays);
+      case 'calculateCorrelationMatrix':
+        return this.calculateCorrelationMatrix(args.denoms);
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
   }
 
   async getMarketData(denom: string, timeframe = '24h'): Promise<MarketDataPoint[]> {
@@ -320,10 +341,15 @@ export class MarketDataAgent extends AgentCapability {
 
   async generateTradingSignals(denom: string, timeframe = '24h'): Promise<TradingSignal[]> {
     try {
-      const [indicators, trendAnalysis] = await Promise.all([
-        this.calculateTechnicalIndicators(denom, timeframe),
-        this.precompiles.oracle.execute({ action: 'analyze_price_trend', denom })
-      ]);
+      const indicators = await this.calculateTechnicalIndicators(denom, timeframe);
+      
+      // Simple trend analysis based on recent price movement
+      const marketData = await this.getMarketData(denom, timeframe);
+      const recentPrices = marketData.slice(-10).map(d => Number(d.price));
+      const trendAnalysis = {
+        direction: recentPrices[recentPrices.length - 1] > recentPrices[0] ? 'bullish' : 'bearish',
+        strength: Math.abs((recentPrices[recentPrices.length - 1] - recentPrices[0]) / recentPrices[0]) * 100
+      };
 
       const signals: TradingSignal[] = [];
       const currentPrice = await this.precompiles.oracle.execute({ action: 'get_price', denom });
@@ -371,21 +397,23 @@ export class MarketDataAgent extends AgentCapability {
       }
 
       // Trend-based signals
-      if (trendAnalysis && trendAnalysis.trend === 'bullish' && trendAnalysis.strength !== 'weak') {
+      if (trendAnalysis && trendAnalysis.direction === 'bullish' && trendAnalysis.strength > 2) {
+        const strengthLevel = trendAnalysis.strength > 5 ? 'strong' : trendAnalysis.strength > 2 ? 'moderate' : 'weak';
         signals.push({
           type: 'buy',
-          strength: trendAnalysis.strength,
+          strength: strengthLevel as 'strong' | 'moderate' | 'weak',
           confidence: 70,
-          reason: `${trendAnalysis.strength} bullish trend detected`,
+          reason: `${strengthLevel} bullish trend detected`,
           timestamp: new Date().toISOString(),
           price: currentPrice.price.toString()
         });
-      } else if (trendAnalysis && trendAnalysis.trend === 'bearish' && trendAnalysis.strength !== 'weak') {
+      } else if (trendAnalysis && trendAnalysis.direction === 'bearish' && trendAnalysis.strength > 2) {
+        const strengthLevel = trendAnalysis.strength > 5 ? 'strong' : trendAnalysis.strength > 2 ? 'moderate' : 'weak';
         signals.push({
           type: 'sell',
-          strength: trendAnalysis.strength,
+          strength: strengthLevel as 'strong' | 'moderate' | 'weak',
           confidence: 70,
-          reason: `${trendAnalysis.strength} bearish trend detected`,
+          reason: `${strengthLevel} bearish trend detected`,
           timestamp: new Date().toISOString(),
           price: currentPrice.price.toString()
         });
@@ -537,7 +565,12 @@ export class MarketDataAgent extends AgentCapability {
     strength: 'weak' | 'moderate' | 'strong';
     direction: 'positive' | 'negative';
   }> {
-    const insights = [];
+    const insights: Array<{
+      pair: [string, string];
+      correlation: number;
+      strength: 'weak' | 'moderate' | 'strong';
+      direction: 'positive' | 'negative';
+    }> = [];
 
     for (let i = 0; i < assets.length; i++) {
       for (let j = i + 1; j < assets.length; j++) {

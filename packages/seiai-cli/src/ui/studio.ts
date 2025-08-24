@@ -89,7 +89,7 @@ export class StudioInterface {
         // Process as natural language dApp request
         await this.processNaturalLanguageRequest(trimmedInput);
         
-      } catch (error) {
+      } catch (error: any) {
         if (error.name === 'ExitPromptError') {
           console.log(chalk.yellow('\n👋 Thanks for using Sei AI Studio!'));
           break;
@@ -181,7 +181,7 @@ export class StudioInterface {
       // Generate the project
       await this.generateProject(options, analysis);
       
-    } catch (error) {
+    } catch (error: any) {
       spinner.fail(chalk.red(`❌ Failed to process request: ${error.message}`));
     }
   }
@@ -319,7 +319,7 @@ export class StudioInterface {
       
       this.printNextSteps(options);
       
-    } catch (error) {
+    } catch (error: any) {
       spinner.fail(chalk.red(`❌ Generation failed: ${error.message}`));
     }
   }
@@ -416,7 +416,7 @@ export class StudioInterface {
       console.log(chalk.dim(`Contract: ${result.contractAddress}`));
       console.log(chalk.dim(`Tx: ${result.txHash}`));
       
-    } catch (error) {
+    } catch (error: any) {
       spinner.fail(chalk.red(`❌ Deployment failed: ${error.message}`));
     }
   }
@@ -460,7 +460,7 @@ export class StudioInterface {
         }
       }
       
-    } catch (error) {
+    } catch (error: any) {
       spinner.fail(chalk.red(`❌ Enhancement failed: ${error.message}`));
     }
   }
