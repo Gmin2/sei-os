@@ -23,26 +23,32 @@ export function createGenerateCommand(): Command {
       let spinner: any;
       try {
         spinner = ora('🤖 Analyzing your description...').start();
-        
+
         const analyzer = new NaturalLanguageAnalyzer();
         const analysis = analyzer.analyze(description);
+
+        spinner.succeed(chalk.green(`✅ Analysis complete! (${analysis.confidence}% confidence)`));
         
-        spinner.succeed(chalk.green('✅ Analysis complete!'));
-        
+        // Always show basic analysis results
+        console.log('\n📋 Detected Requirements:');
+        console.log(`  Project Type: ${chalk.cyan(analysis.projectType)}`);
+        console.log(`  Packages: ${chalk.cyan(analysis.packages.filter(p => p.required).map(p => p.name).join(', '))}`);
+        console.log(`  Features: ${chalk.cyan(analysis.features.join(', '))}`);
+
         if (options.verbose) {
-          console.log('\n📋 Analysis Results:');
+          console.log('\n🔍 Detailed Analysis:');
           console.log(`  Intent: ${analysis.intent}`);
-          console.log(`  Project Type: ${analysis.projectType}`);
           console.log(`  Confidence: ${analysis.confidence}%`);
-          console.log(`  Required Packages: ${analysis.packages.filter(p => p.required).map(p => p.name).join(', ')}`);
-          console.log(`  Features: ${analysis.features.join(', ')}`);
           console.log(`  Integrations: ${analysis.integrations.map(i => i.type).join(', ')}`);
         }
         
         // Generate project name if not specified
         const projectName = analyzer.generateProjectName(description, analysis.projectType);
         const outputDir = options.output || `./${projectName}`;
-        
+
+        console.log(`\n📦 Will generate: ${chalk.green(projectName)}`);
+        console.log(`📍 Location: ${chalk.cyan(outputDir)}`);
+
         // Merge CLI options with analysis
         const packages = [
           ...analysis.packages.map(p => p.name),
@@ -78,24 +84,24 @@ export function createGenerateCommand(): Command {
             {
               type: 'confirm',
               name: 'proceed',
-              message: `Generate "${projectName}" with ${packages.length} packages?`,
+              message: `Generate this project?`,
               default: true
             }
           ]);
-          
+
           if (!proceed) {
             console.log(chalk.yellow('🚫 Generation cancelled.'));
             return;
           }
         }
-        
+
         // Generate the project
-        spinner = ora('🏗️ Generating project structure...').start();
-        
+        console.log('\n🏗️ Generating project...');
+
         const generator = new ProjectGenerator();
         await generator.generateProject(generationOptions, analysis);
-        
-        spinner.succeed(chalk.green(`✅ Project generated successfully!`));
+
+        console.log(chalk.green(`\n✅ Project generated successfully!`));
         
         // Show next steps
         console.log('\n🚀 Next Steps:');

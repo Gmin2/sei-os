@@ -1,6 +1,6 @@
 {
   "name": "@sei-code/analytics",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Blockchain data analysis and monitoring for Sei network",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

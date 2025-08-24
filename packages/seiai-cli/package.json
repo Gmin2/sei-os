@@ -1,10 +1,11 @@
 {
-  "name": "seiai",
-  "version": "1.0.0",
+  "name": "@sei-code/seiai-cli",
+  "version": "1.0.3",
   "description": "Claude Code-style CLI for generating Sei AI dApps with natural language",
   "main": "dist/index.js",
   "bin": {
-    "seiai": "./dist/index.js"
+    "seiai": "./dist/index.js",
+    "sei-cli": "./dist/index.js"
   },
   "type": "module",
   "scripts": {
@@ -28,15 +29,15 @@
   "author": "Sei Agent Studio",
   "license": "MIT",
   "dependencies": {
-    "@sei-code/core": "workspace:*",
-    "@sei-code/wallets": "workspace:*",
-    "@sei-code/precompiles": "workspace:*",
-    "@sei-code/transactions": "workspace:*",
-    "@sei-code/nft": "workspace:*",
-    "@sei-code/analytics": "workspace:*",
-    "@sei-code/social": "workspace:*",
-    "@sei-code/models": "workspace:*",
-    "@sei-code/x402": "workspace:*",
+    "@sei-code/core": "^1.0.0",
+    "@sei-code/wallets": "^1.0.0",
+    "@sei-code/precompiles": "^1.0.0",
+    "@sei-code/transactions": "^1.0.0",
+    "@sei-code/nft": "^1.0.0",
+    "@sei-code/analytics": "^1.0.0",
+    "@sei-code/social": "^1.0.0",
+    "@sei-code/models": "^1.0.0",
+    "@sei-code/x402": "^1.0.0",
     "boxen": "^7.1.1",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
@@ -64,5 +65,8 @@
     "type": "git",
     "url": "https://github.com/sei-agent-studio/sei-agent-studio.git",
     "directory": "packages/seiai-cli"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

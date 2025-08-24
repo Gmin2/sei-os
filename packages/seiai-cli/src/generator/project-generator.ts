@@ -25,44 +25,62 @@ export class ProjectGenerator {
 
   async generateProject(options: GenerationOptions, analysis: AnalyzedRequest): Promise<void> {
     const { projectName, outputDir, template, packages, features, network, integrations } = options;
-    
+
     try {
       // Validate inputs
+      console.log(chalk.dim('🔍 Validating generation options...'));
       this.validateGenerationOptions(options);
-      
+
       // Ensure output directory doesn't exist
       if (await fs.pathExists(outputDir)) {
         throw new Error(`Directory ${outputDir} already exists. Please choose a different name or remove the existing directory.`);
       }
 
       // Create base project structure
+      console.log('📁 Creating project structure...');
       await this.createBaseStructure(outputDir, projectName);
-      
+      console.log(chalk.green('   ✓ Project directories created'));
+
       // Generate package.json
+      console.log('📦 Generating package.json...');
       await this.generatePackageJson(outputDir, projectName, packages, analysis);
-      
+      console.log(chalk.green(`   ✓ Added ${packages.length} @sei-code packages`));
+
       // Generate TypeScript config
+      console.log('⚙️  Generating TypeScript configuration...');
       await this.generateTsConfig(outputDir);
-      
+      console.log(chalk.green('   ✓ TypeScript config created'));
+
       // Generate main application files
+      console.log('🏗️  Generating application files...');
       await this.generateApplicationFiles(outputDir, template, packages, features, integrations, network);
-      
+      console.log(chalk.green(`   ✓ Generated ${template} template files`));
+
       // Generate documentation
+      console.log('📚 Generating documentation...');
       await this.generateDocumentation(outputDir, projectName, analysis, options);
-      
+      console.log(chalk.green('   ✓ README and docs created'));
+
       // Generate deployment scripts
+      console.log('🚀 Generating deployment scripts...');
       await this.generateDeploymentScripts(outputDir, network);
-      
+      console.log(chalk.green(`   ✓ Deployment scripts for ${network} created`));
+
       // Generate gitignore and other config files
+      console.log('⚙️  Generating configuration files...');
       await this.generateConfigFiles(outputDir);
-      
+      console.log(chalk.green('   ✓ Config files (.gitignore, .env.example) created'));
+
       // Install dependencies if requested
       if (!options.skipInstall) {
+        console.log('📦 Installing dependencies...');
         await this.installDependencies(outputDir);
       }
-      
+
       // Validate generated project
+      console.log('✅ Validating generated project...');
       await this.validateGeneratedProject(outputDir);
+      console.log(chalk.green('   ✓ Project validation passed'));
       
     } catch (error) {
       // Cleanup on failure
@@ -220,17 +238,21 @@ export class ProjectGenerator {
     network: string
   ): Promise<void> {
     // Generate main index.ts
+    console.log(chalk.dim('   Creating src/index.ts...'));
     await this.generateMainFile(outputDir, template, packages, integrations);
-    
+
     // Generate agent configuration
+    console.log(chalk.dim('   Creating src/config/agent.ts...'));
     await this.generateAgentConfig(outputDir, packages, features, network);
-    
+
     // Generate environment file
+    console.log(chalk.dim('   Creating .env.example...'));
     await this.generateEnvFile(outputDir, integrations, network);
-    
+
     // Generate specific template files
+    console.log(chalk.dim(`   Creating ${template} specific files...`));
     await this.generateTemplateFiles(outputDir, template, packages, features);
-    
+
     // Generate integration files
     await this.generateIntegrationFiles(outputDir, integrations);
   }
@@ -1101,12 +1123,14 @@ deploy().catch(console.error);`;
 
   private async installDependencies(outputDir: string): Promise<void> {
     const { spawn } = await import('child_process');
-    
+
     return new Promise((resolve, reject) => {
       // Try pnpm first, then npm
       const packageManager = process.env.npm_config_user_agent?.includes('pnpm') ? 'pnpm' : 'npm';
       const installCmd = packageManager === 'pnpm' ? ['install'] : ['install'];
-      
+
+      console.log(chalk.dim(`   Running: ${packageManager} ${installCmd.join(' ')}`));
+
       const installer = spawn(packageManager, installCmd, {
         cwd: outputDir,
         stdio: 'pipe'
@@ -1116,15 +1140,32 @@ deploy().catch(console.error);`;
       let stderr = '';
 
       installer.stdout?.on('data', (data) => {
-        stdout += data.toString();
+        const output = data.toString();
+        stdout += output;
+        // Show real-time progress for important lines
+        const lines = output.split('\n').filter(line => line.trim());
+        for (const line of lines) {
+          if (line.includes('added') || line.includes('packages') || line.includes('Done')) {
+            console.log(chalk.dim(`   ${line.trim()}`));
+          }
+        }
       });
 
       installer.stderr?.on('data', (data) => {
-        stderr += data.toString();
+        const output = data.toString();
+        stderr += output;
+        // Show warnings but not all stderr (some package managers use stderr for normal output)
+        const lines = output.split('\n').filter(line => line.trim());
+        for (const line of lines) {
+          if (line.includes('WARN') && !line.includes('EBADENGINE')) {
+            console.log(chalk.yellow(`   ${line.trim()}`));
+          }
+        }
       });
 
       installer.on('close', (code) => {
         if (code === 0) {
+          console.log(chalk.dim('   ✅ Dependencies installed successfully'));
           resolve();
         } else {
           reject(new Error(`${packageManager} install failed with code ${code}\nStdout: ${stdout}\nStderr: ${stderr}`));

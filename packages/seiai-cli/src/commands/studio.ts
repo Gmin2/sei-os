@@ -260,8 +260,8 @@ async function handleGenerationRequest(
     }
 
     // Generate the project
-    spinner.start('🏗️ Generating project...');
-    
+    console.log('\n🏗️ Generating project...');
+
     const generationOptions = {
       projectName,
       outputDir,
@@ -275,8 +275,8 @@ async function handleGenerationRequest(
     };
 
     await generator.generateProject(generationOptions, analysis);
-    
-    spinner.succeed(chalk.green('✅ Project generated successfully!'));
+
+    console.log(chalk.green('\n✅ Project generated successfully!'));
     
     // Add to session
     session.projects.push({
